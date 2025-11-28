@@ -1,0 +1,35 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # --- PostgreSQL Database Service ---
+  db:
+    # Use the official PostgreSQL image
+    image: postgres:15-alpine
+    container_name: ml_eval_postgres
+    
+    # Map port 5432 (inside container) to 5432 (on your host machine)
+    ports:
+      - "5433:5432"
+      
+    # Environment variables for database initialization
+    environment:
+      # These variables are used by the PostgreSQL image to create the initial user/database.
+      POSTGRES_USER: ${POSTGRES_USER:-ml_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ml_password}
+      POSTGRES_DB: ${POSTGRES_DB:-ml_eval_db}
+      
+      # Allows PostgreSQL to be accessed from outside the container (needed for local dev)
+      PGDATA: /var/lib/postgresql/data/pgdata
+      
+    # Ensure data persists across container restarts/deletions
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/pgdata
+    
+    # Restart the container automatically if it fails
+    restart: always
+
+# Define persistent volume for data storage
+volumes:
+  postgres_data:
+    driver: local

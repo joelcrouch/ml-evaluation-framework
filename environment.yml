@@ -1,0 +1,31 @@
+name: ml-eval-framework
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # --- Core Python & Scientific Computing ---
+  - python=3.11
+  - pip
+  - numpy
+  - pandas
+  - scikit-learn
+  - matplotlib
+  
+  # --- Database / ORM ---
+  - sqlalchemy>=2.0
+  - alembic
+  - psycopg2-binary
+  
+  # --- Code Quality & Testing ---
+  - black
+  - flake8
+  - pytest
+  - pytest-cov
+
+  # --- Supplementary Pip Packages ---
+  - pip:
+    # Project-specific/utility packages not typically available via Conda
+    - pydantic  # For data validation (good for JSONB consistency checks)
+    - click     # For the CLI interface (Sprint 1/2)
+    - python-dotenv # For loading environment variables (.env)
+    - typing-extensions # For compatibility with older Python versions (if needed)

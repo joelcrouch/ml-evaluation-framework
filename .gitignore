@@ -1,0 +1,95 @@
+# -------------------------------------------------------------------
+# 1. CREDENTIALS, ENVIRONMENT SECRETS, AND LOGS
+# -------------------------------------------------------------------
+
+# CRITICAL: DO NOT COMMIT CREDENTIALS
+.env
+.env.example
+# Database logs and debug files
+*.log
+*.sqlite
+
+# -------------------------------------------------------------------
+# 2. PYTHON ENVIRONMENT (Conda and Virtual Environments)
+# -------------------------------------------------------------------
+
+# Standard Python virtual environment folders
+venv/
+.venv/
+
+# Conda environment files and metadata
+envs/
+.conda/
+conda-meta/
+# Explicitly ignore the environment name used in environment.yml
+ml-eval-framework/
+# History file often created by Conda
+.python_history
+
+# -------------------------------------------------------------------
+# 3. PYTHON ARTIFACTS AND BYTECODE
+# -------------------------------------------------------------------
+
+# Bytecode files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Compiled extension files
+*.so
+
+# MyPy cache files
+.mypy_cache/
+
+# IPython/Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# -------------------------------------------------------------------
+# 4. TESTING AND COVERAGE
+# -------------------------------------------------------------------
+
+# Pytest cache directory
+.pytest_cache/
+
+# Coverage report files
+.coverage
+htmlcov/
+.coverage.*
+
+# -------------------------------------------------------------------
+# 5. DOCKER AND DATABASE (PostgreSQL)
+# -------------------------------------------------------------------
+
+# Ignore the volume where Docker persists PostgreSQL data
+# This matches the volume name in docker-compose.yml
+postgres_data/
+
+# Docker build cache directories
+.dockerignore
+!Dockerfile
+!docker-compose.yml
+
+# -------------------------------------------------------------------
+# 6. BUILD & DISTRIBUTION
+# -------------------------------------------------------------------
+
+dist/
+build/
+*.egg-info/
+
+# -------------------------------------------------------------------
+# 7. IDE AND OS FILES
+# -------------------------------------------------------------------
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# JetBrains IDEs (PyCharm, IntelliJ, etc.)
+.idea/
+
+# VS Code
+.vscode/
