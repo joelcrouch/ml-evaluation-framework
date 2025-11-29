@@ -661,17 +661,87 @@ Check status with: docker ps
 
 
 ```
-# Done
+
 
 2. **Day 3-4: Schema Design**
-   - [ ] Design complete ER diagram
-   - [ ] Write `scripts/schema.sql` with universal schema
-   - [ ] Ensure `origin` and `is_verified` fields included
+   - [✅ ] Design complete ER diagram
+   - [✅ ] Write `scripts/schema.sql` with universal schema
+   - [✅ ] Ensure `origin` and `is_verified` fields included
 
 3. **Day 5-6: ORM Models**
-   - [ ] Implement database connection module
-   - [ ] Create `TestCase` model (NOT `TestPrompt`)
-   - [ ] Create remaining models (ModelRun, Response, Evaluation)
+   - [✅ ] Implement database connection module
+   - [✅ ] Create `TestCase` model (NOT `TestPrompt`)
+   - [✅ ] Create remaining models (ModelRun, Response, Evaluation)
+
+
+#### screenshot  
+./start_db.sh 
+Starting PostgreSQL database using Docker Compose...
+WARN[0000] /home/dell-linux-dev3/Projects/ml-evaluation-framework/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+[+] Running 2/2
+ ✔ Network ml-evaluation-framework_default  Created                                                                                   0.1s 
+ ✔ Container ml_eval_postgres               Started                                                                                   0.3s 
+✅ Database 'ml_eval_postgres' started successfully on port 5432.
+Check status with: docker ps
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ python scripts/setup_db.py
+Imports successful.
+--- Starting database table creation ---
+Successfully connected to database: postgresql+psycopg2://ml_user:***@localhost:5433/ml_eval_db
+🎉 SUCCESS: All tables created successfully!
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker ps
+CONTAINER ID   IMAGE                COMMAND                  CREATED              STATUS              PORTS                                         NAMES
+e5edbcb5279a   postgres:15-alpine   "docker-entrypoint.s…"   About a minute ago   Up About a minute   0.0.0.0:5433->5432/tcp, [::]:5433->5432/tcp   ml_eval_postgres
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker exec -it ml_eval_postgres psql -U ml_user -d ml_eval_db
+psql (15.15)
+Type "help" for help.
+
+ml_eval_db=# \dt
+            List of relations
+ Schema |     Name     | Type  |  Owner  
+--------+--------------+-------+---------
+ public | evaluations  | table | ml_user
+ public | model_runs   | table | ml_user
+ public | responses    | table | ml_user
+ public | test_prompts | table | ml_user
+(4 rows)
+
+ml_eval_db=# 
+
+```
+./start_db.sh 
+Starting PostgreSQL database using Docker Compose...
+WARN[0000] /home/dell-linux-dev3/Projects/ml-evaluation-framework/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+[+] Running 2/2
+ ✔ Network ml-evaluation-framework_default  Created                                                                                   0.1s 
+ ✔ Container ml_eval_postgres               Started                                                                                   0.3s 
+✅ Database 'ml_eval_postgres' started successfully on port 5432.
+Check status with: docker ps
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ python scripts/setup_db.py
+Imports successful.
+--- Starting database table creation ---
+Successfully connected to database: postgresql+psycopg2://ml_user:***@localhost:5433/ml_eval_db
+🎉 SUCCESS: All tables created successfully!
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker ps
+CONTAINER ID   IMAGE                COMMAND                  CREATED              STATUS              PORTS                                         NAMES
+e5edbcb5279a   postgres:15-alpine   "docker-entrypoint.s…"   About a minute ago   Up About a minute   0.0.0.0:5433->5432/tcp, [::]:5433->5432/tcp   ml_eval_postgres
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker exec -it ml_eval_postgres psql -U ml_user -d ml_eval_db
+psql (15.15)
+Type "help" for help.
+
+ml_eval_db=# \dt
+            List of relations
+ Schema |     Name     | Type  |  Owner  
+--------+--------------+-------+---------
+ public | evaluations  | table | ml_user
+ public | model_runs   | table | ml_user
+ public | responses    | table | ml_user
+ public | test_prompts | table | ml_user
+(4 rows)
+
+ml_eval_db=# 
+
+```
+
 
 4. **Day 7-10: CRUD & Testing**
    - [ ] Implement all CRUD operations with user-first defaults
@@ -682,9 +752,73 @@ Check status with: docker ps
 ### Week 2 Priority Tasks
 
 5. **Day 11-12: Alembic Setup**
-   - [ ] Initialize Alembic
-   - [ ] Create initial migration
-   - [ ] Test migration up/down
+   - [✅] Initialize Alembic
+   - [✅] Create initial migration
+   - [✅ ] Test migration up/down
+
+#### screenshot for alembic verification
+```
+ docker exec -it ml_eval_postgres psql -U ml_user -d ml_eval_db
+psql (15.15)
+Type "help" for help.
+
+ml_eval_db=# \dt
+Did not find any relations.
+ml_eval_db=# \q
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ alembic init migrations
+  FAILED: Directory migrations already exists and is not empty
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ alembic init migrations
+  Creating directory /home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations ...  done
+  Creating directory /home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/versions ...  done
+  Generating /home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/script.py.mako ...  done
+  Generating /home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/README ...  done
+  Generating /home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/env.py ...  done
+  Generating /home/dell-linux-dev3/Projects/ml-evaluation-framework/alembic.ini ...  done
+  Please edit configuration/connection/logging settings in /home/dell-linux-dev3/Projects/ml-evaluation-framework/alembic.ini before
+  proceeding.
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ alembic revision --autogenerate -m "Initial schema"
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.autogenerate.compare] Detected added table 'model_runs'
+INFO  [alembic.autogenerate.compare] Detected added index 'ix_model_runs_id' on '('id',)'
+INFO  [alembic.autogenerate.compare] Detected added index 'ix_model_runs_model_name' on '('model_name',)'
+INFO  [alembic.autogenerate.compare] Detected added table 'test_prompts'
+INFO  [alembic.autogenerate.compare] Detected added index 'ix_test_prompts_domain' on '('domain',)'
+INFO  [alembic.autogenerate.compare] Detected added index 'ix_test_prompts_id' on '('id',)'
+INFO  [alembic.autogenerate.compare] Detected added index 'ix_test_prompts_name' on '('name',)'
+INFO  [alembic.autogenerate.compare] Detected added table 'responses'
+INFO  [alembic.autogenerate.compare] Detected added index 'ix_responses_id' on '('id',)'
+INFO  [alembic.autogenerate.compare] Detected added index 'ix_responses_model_run_id' on '('model_run_id',)'
+INFO  [alembic.autogenerate.compare] Detected added index 'ix_responses_prompt_id' on '('prompt_id',)'
+INFO  [alembic.autogenerate.compare] Detected added table 'evaluations'
+INFO  [alembic.autogenerate.compare] Detected added index 'ix_evaluations_id' on '('id',)'
+INFO  [alembic.autogenerate.compare] Detected added index 'ix_evaluations_response_id' on '('response_id',)'
+  Generating /home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/versions/668bc8211f5e_initial_schema.py ...  done
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ alembic upgrade head
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 668bc8211f5e, Initial schema
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker exec -it ml_eval_postgres psql -U ml_user -d ml_eval_db
+psql (15.15)
+Type "help" for help.
+
+ml_eval_db=# \dt
+             List of relations
+ Schema |      Name       | Type  |  Owner  
+--------+-----------------+-------+---------
+ public | alembic_version | table | ml_user
+ public | evaluations     | table | ml_user
+ public | model_runs      | table | ml_user
+ public | responses       | table | ml_user
+ public | test_prompts    | table | ml_user
+(5 rows)
+
+ml_eval_db=# \q
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Pro
+```
+
+
+#### Done 
 
 6. **Day 13-14: Validation & Documentation**
    - [ ] Run seed script, validate JSONB storage
