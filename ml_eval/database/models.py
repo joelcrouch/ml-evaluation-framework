@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, F
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import UniqueConstraint
 from datetime import datetime
 
 # Base class for declarative class definitions
@@ -63,6 +64,14 @@ class Response(Base):
     This links ModelRun and TestPrompt.
     """
     __tablename__ = "responses"
+
+    # ----------------------------------------------------------------------
+    # 2. ADD THE UNIQUE CONSTRAINT HERE
+    # This prevents the same model version from running the same prompt twice.
+    __table_args__ = (
+        UniqueConstraint('prompt_id', 'model_run_id', name='uq_prompt_model_run'),
+    )
+    # ----------------------------------------------------------------------
 
     # Primary Key
     id = Column(Integer, primary_key=True, index=True)
