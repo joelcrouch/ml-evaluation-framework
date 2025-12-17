@@ -22,6 +22,11 @@ dependencies:
   - pytest
   - pytest-cov
 
+  # ---sprint 2 (revised) editions
+  - uvicorn
+  - fastapi
+  - pydantic
+
   # --- Supplementary Pip Packages ---
   - pip:
     # Project-specific/utility packages not typically available via Conda

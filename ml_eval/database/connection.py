@@ -2,9 +2,10 @@
 
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
-
+from sqlalchemy.exc import OperationalError
+# from .connection import engine
 # Load environment variables from .env file
 # This is crucial for securely loading the SQLALCHEMY_DATABASE_URL
 load_dotenv()
@@ -63,3 +64,17 @@ def get_db():
 
 # Note: The Base object will be imported into `ml_eval/database/models.py` 
 # for defining the TestCase, ModelRun, Response, and Evaluation tables.
+
+def check_database_connection():
+    """Performs a non-destructive check to ensure the database is reachable and accepting connections."""
+    try:
+        # Tries to connect and execute a simple query (SELECT 1 is a universal standard)
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        print("✅ Database connection verified.")
+    except OperationalError as e:
+        # Re-raise a friendlier error to crash the application if the database is unreachable
+        print("❌ FATAL ERROR: Database connection failed. Is PostgreSQL running and URL correct?")
+        raise ConnectionError(f"Database unavailable: {e}")
+
+from . import models

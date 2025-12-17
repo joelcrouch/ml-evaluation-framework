@@ -1,37 +1,44 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Float
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy import UniqueConstraint
 from datetime import datetime
-
-# Base class for declarative class definitions
-Base = declarative_base()
+from .connection import Base
 
 class TestPrompt(Base):
     """
     Represents a single verified test case (Golden Set).
     It contains the input data and the ground truth expected output.
     """
-    __tablename__ = "test_prompts"
+    __tablename__ = "test_cases"
 
     # Primary Key
     id = Column(Integer, primary_key=True, index=True)
 
     # Core Data Fields
-    name = Column(String, index=True, nullable=False)
-    domain = Column(String, index=True, nullable=False) # e.g., 'NLP', 'CV', 'Recommender'
+    test_case_name = Column(String, index=True, nullable=False)
+    model_type = Column(String, index=True, nullable=False) # e.g., 'NLP', 'CV', 'Recommender'
+    input_type = Column(String, nullable=False)
+    output_type = Column(String, nullable=False)
 
     # Universal Input/Output Storage (uses JSONB for flexibility across domains)
     input_data = Column(JSONB, nullable=False)        # e.g., {'text': 'What is the capital?', 'image_path': '...', 'user_id': 123}
-    expected_output = Column(JSONB, nullable=False)   # The ground truth
+    ground_truth = Column(JSONB, nullable=False)   # The ground truth
+
+    # Organization
+    category = Column(String, index=True)
+    tags = Column(ARRAY(String))
+    difficulty = Column(String)
 
     # User-First Philosophy Fields
     origin = Column(String, default="human", nullable=False)  # 'human', 'ai_generated', 'production_log'
     is_verified = Column(Boolean, default=True, nullable=False) # True for human-submitted Golden Sets
 
     # Metadata
+    test_case_metadata = Column(JSONB)
+    created_by = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     responses = relationship("Response", back_populates="prompt")
@@ -49,10 +56,17 @@ class ModelRun(Base):
     # Model Identification
     model_name = Column(String, index=True, nullable=False) # e.g., 'claude-3-sonnet', 'resnet50-v2'
     model_version = Column(String, nullable=False)       # Version tracking is a core feature
+    model_type = Column(String, nullable=False) # e.g., 'computer_vision', 'nlp', etc.
+    model_endpoint = Column(String) # API URL or local path
+    config = Column(JSONB) # Model-specific configuration
     
     # Environment/Metadata
     started_at = Column(DateTime, default=datetime.utcnow)
-    finished_at = Column(DateTime)
+    completed_at = Column(DateTime)
+    status = Column(String, default='pending') # 'pending', 'running', 'completed', 'failed'
+    total_cases = Column(Integer, default=0)
+    completed_cases = Column(Integer, default=0)
+    failed_cases = Column(Integer, default=0)
     
     # Relationships
     responses = relationship("Response", back_populates="model_run")
@@ -69,7 +83,7 @@ class Response(Base):
     # 2. ADD THE UNIQUE CONSTRAINT HERE
     # This prevents the same model version from running the same prompt twice.
     __table_args__ = (
-        UniqueConstraint('prompt_id', 'model_run_id', name='uq_prompt_model_run'),
+        UniqueConstraint('test_case_id', 'run_id', name='uq_test_case_run'),
     )
     # ----------------------------------------------------------------------
 
@@ -77,11 +91,19 @@ class Response(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # Foreign Keys
-    prompt_id = Column(Integer, ForeignKey("test_prompts.id"), nullable=False, index=True)
-    model_run_id = Column(Integer, ForeignKey("model_runs.id"), nullable=False, index=True)
+    run_id = Column(Integer, ForeignKey("model_runs.id"), nullable=False, index=True)
+    test_case_id = Column(Integer, ForeignKey("test_cases.id"), nullable=False, index=True)
 
     # Universal Output Storage (JSONB)
     output_data = Column(JSONB, nullable=False) # The actual model prediction
+
+    # Performance metrics
+    latency_ms = Column(Integer)
+    memory_mb = Column(Float)
+    tokens_used = Column(Integer)
+
+    # Error handling
+    error_message = Column(String)
 
     # Metadata
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -105,13 +127,14 @@ class Evaluation(Base):
     response_id = Column(Integer, ForeignKey("responses.id"), nullable=False, index=True)
 
     # Evaluation Data
-    evaluator_name = Column(String, nullable=False) # e.g., 'BLEU', 'Accuracy', 'Custom_Metric_V1'
+    evaluator_type = Column(String, nullable=False) # e.g., 'BLEU', 'Accuracy', 'Custom_Metric_V1'
     score = Column(Float, nullable=False)           # The calculated metric score
-    is_pass = Column(Boolean, nullable=False)       # Simple pass/fail against a threshold
+    passed = Column(Boolean, nullable=False)       # Simple pass/fail against a threshold
 
     # Metadata
+    metrics = Column(JSONB)                         # Optional: Store evaluation configuration or debug info
+    feedback = Column(String)
     evaluated_at = Column(DateTime, default=datetime.utcnow)
-    details = Column(JSONB)                         # Optional: Store evaluation configuration or debug info
 
     # Relationships
     response = relationship("Response", back_populates="evaluations")
