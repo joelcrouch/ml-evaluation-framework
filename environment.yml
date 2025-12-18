@@ -34,3 +34,6 @@ dependencies:
     - click     # For the CLI interface (Sprint 1/2)
     - python-dotenv # For loading environment variables (.env)
     - typing-extensions # For compatibility with older Python versions (if needed)
+    - tensorflow
+    - tensorflow-datasets
+    - requests
