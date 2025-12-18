@@ -1,7 +1,8 @@
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import os
-
+#  this is not a complex model we use it b/c the data is freely available ant therer 
+#are many tutorials about it
 # Define constants
 IMG_SIZE = 160 # All images will be resized to 160x160
 BATCH_SIZE = 32
