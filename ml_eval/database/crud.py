@@ -53,9 +53,12 @@ def get_prompt(db: Session, prompt_id: int) -> Optional[TestPrompt]:
     """Reads a single prompt by its ID."""
     return db.query(TestPrompt).filter(TestPrompt.id == prompt_id).first()
 
-def get_prompts_by_model_type(db: Session, model_type: str, limit: int = 100) -> List[TestPrompt]:
-    """Reads a list of prompts filtered by model_type."""
-    return db.query(TestPrompt).filter(TestPrompt.model_type == model_type).limit(limit).all()
+def get_prompts_by_model_type(db: Session, model_type: str, limit: Optional[int] = None) -> List[TestPrompt]:
+    """Reads a list of prompts filtered by model_type. Fetches all if limit is None."""
+    query = db.query(TestPrompt).filter(TestPrompt.model_type == model_type)
+    if limit is not None:
+        query = query.limit(limit)
+    return query.all()
 
 def update_prompt(db: Session, prompt_id: int, prompt_update: schemas.TestPromptUpdate) -> Optional[TestPrompt]:
     """Updates a TestPrompt with new data."""
