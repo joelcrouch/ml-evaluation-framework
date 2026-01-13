@@ -177,7 +177,9 @@ curl -X 'POST'   'http://localhost:8000/api/v1/runs/'   -H 'Content-Type: applic
     "model_version": "1.0",
     "model_type": "image_classification"
   }'
-{"model_name":"FlowerClassifier-Full-Test-734","model_version":"1.0","model_type":"image_classification","model_endpoint":null,"config":{},"id":6,"status":"pending","started_at":"2025-12-18T19:31:06.712754","completed_at":null,"total_cases":0,"completed_cases":0,"failed_cases":0}(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ python scripts/run_evaluation.py 6
+{"model_name":"FlowerClassifier-Full-Test-734","model_version":"1.0","model_type":"image_classification","model_endpoint":null,"config":{},"id":6,"status":"pending","started_at":"2025-12-18T19:31:06.712754","completed_at":null,"total_cases":0,"completed_cases":0,"failed_cases":0}
+
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ python scripts/run_evaluation.py 6
 2025-12-18 11:31:30.886383: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
 2025-12-18 11:31:30.916528: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
 To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
