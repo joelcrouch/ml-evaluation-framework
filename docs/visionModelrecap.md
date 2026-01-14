@@ -219,9 +219,11 @@ Evaluation for ModelRun 6 completed.
    - Total Cases: 759
    - Completed: 759
    - Failed: 0
+
 (ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ python scripts/generate_report.py 
 usage: generate_report.py [-h] run_id
 generate_report.py: error: the following arguments are required: run_id
+
 (ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ python scripts/generate_report.py  6
 --- Generating Report for ModelRun ID: 6 ---
 
