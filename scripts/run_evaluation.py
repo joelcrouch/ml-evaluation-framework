@@ -17,6 +17,10 @@ from ml_eval.core.implementations.image_classifier_adapter import ImageClassifie
 from ml_eval.core.implementations.accuracy_evaluator import AccuracyEvaluator
 from ml_eval.core.implementations.exact_match import ExactMatchEvaluator
 from ml_eval.database import crud
+from ml_eval.core.implementations.keras_time_series_adapter import KerasTimeSeriesAdapter
+from ml_eval.core.implementations.keras_time_series_model import KerasTimeSeriesModel
+from ml_eval.core.implementations.mean_squared_error_evaluator import MeanSquaredErrorEvaluator
+
 
 def main():
     """
@@ -54,6 +58,23 @@ def main():
         image_classifier_model = ImageClassifierModel()
         model_adapter = ImageClassifierAdapter(model=image_classifier_model)
         evaluator = AccuracyEvaluator()
+    elif model_run.model_type=="time_series_keras":
+        model_path = os.path.join("models", f"{model_run.model_name}.keras")
+        if not os.path.exists(model_path):
+            print(f"❌ Error: Model file not found at {model_path}")   
+            return
+        ts_model = KerasTimeSeriesModel(model_path=model_path)
+        model_adapter = KerasTimeSeriesAdapter(model=ts_model)  # FIX: "adapter" not "adaptor"
+        evaluator = MeanSquaredErrorEvaluator()
+    elif model_run.model_type == "baseline_time_series":
+        model_path = os.path.join("models", f"{model_run.model_name}.keras")
+        if not os.path.exists(model_path):
+            print(f"❌ Error: Model file not found at {model_path}")
+            return
+        
+        baseline_model = lineTimeSeriesModel(model_path=model_path)
+        model_adapter = BaselineTimeSeriesAdapter(model=baseline_model)
+        evaluator = MeanSquaredErrorEvaluator()
     else:
         print(f"❌ Error: Unsupported model_type '{model_run.model_type}' for evaluation.")
         return

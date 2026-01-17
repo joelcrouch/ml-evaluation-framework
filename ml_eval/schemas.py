@@ -1,7 +1,7 @@
 # ml_eval/schemas.py
 
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
 from datetime import datetime
 
 # --- Base Schemas for Data Exchange ---
@@ -13,8 +13,8 @@ class TestPromptBase(BaseModel):
     model_type: str = Field(..., description="The ML domain/model type this test belongs to (e.g., 'nlp', 'computer_vision').")
     input_type: str = Field(..., description="The type of the input data (e.g., 'text', 'image_path').")
     output_type: str = Field(..., description="The type of the expected output (e.g., 'classification', 'bounding_boxes').")
-    input_data: Dict[str, Any] = Field(..., description="The universal JSONB input data for the model.")
-    ground_truth: Dict[str, Any] = Field(..., description="The expected ground truth output for evaluation.")
+    input_data: Union[Dict[str, Any], List[Dict[str, Any]]] = Field(..., description="The universal JSONB input data for the model.")
+    ground_truth: Union[Dict[str, Any], List[Dict[str, Any]]] = Field(..., description="The expected ground truth output for evaluation.")
     
     # Organization
     category: Optional[str] = Field(None)

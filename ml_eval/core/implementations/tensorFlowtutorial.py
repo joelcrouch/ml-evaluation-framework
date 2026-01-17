@@ -152,6 +152,7 @@ class WindowGenerator():
             f'Label indices: {self.label_indices}',
             f'Label column name(s): {self.label_columns}'])
 
+@tf.keras.saving.register_keras_serializable()
 class Baseline(tf.keras.Model):
     def __init__(self, label_index=None):
         super().__init__()
