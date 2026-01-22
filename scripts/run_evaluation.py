@@ -58,13 +58,58 @@ def main():
         image_classifier_model = ImageClassifierModel()
         model_adapter = ImageClassifierAdapter(model=image_classifier_model)
         evaluator = AccuracyEvaluator()
-    elif model_run.model_type=="time_series_keras":
+    elif model_run.model_type == "time_series_keras":
         model_path = os.path.join("models", f"{model_run.model_name}.keras")
         if not os.path.exists(model_path):
             print(f"❌ Error: Model file not found at {model_path}")   
             return
         ts_model = KerasTimeSeriesModel(model_path=model_path)
-        model_adapter = KerasTimeSeriesAdapter(model=ts_model)  # FIX: "adapter" not "adaptor"
+        model_adapter = KerasTimeSeriesAdapter(model=ts_model)
+        evaluator = MeanSquaredErrorEvaluator()
+    elif model_run.model_type == "time_series_linear":
+        model_path = os.path.join("models", f"{model_run.model_name}.keras")
+        if not os.path.exists(model_path):
+            print(f"❌ Error: Model file not found at {model_path}")   
+            return
+        # Re-use the generic Keras components for the linear model
+        ts_model = KerasTimeSeriesModel(model_path=model_path)
+        model_adapter = KerasTimeSeriesAdapter(model=ts_model)
+        evaluator = MeanSquaredErrorEvaluator()
+    elif model_run.model_type == "time_series_dense":
+        model_path = os.path.join("models", f"{model_run.model_name}.keras")
+        if not os.path.exists(model_path):
+            print(f"❌ Error: Model file not found at {model_path}")   
+            return
+        # Re-use the generic Keras components for the dense model
+        ts_model = KerasTimeSeriesModel(model_path=model_path)
+        model_adapter = KerasTimeSeriesAdapter(model=ts_model)
+        evaluator = MeanSquaredErrorEvaluator()
+    elif model_run.model_type == "time_series_multistep_dense":
+        model_path = os.path.join("models", f"{model_run.model_name}.keras")
+        if not os.path.exists(model_path):
+            print(f"❌ Error: Model file not found at {model_path}")   
+            return
+        # The generic Keras components work here too! The Flatten layer is part of the saved model.
+        ts_model = KerasTimeSeriesModel(model_path=model_path)
+        model_adapter = KerasTimeSeriesAdapter(model=ts_model)
+        evaluator = MeanSquaredErrorEvaluator()
+    elif model_run.model_type == "time_series_cnn":
+        model_path = os.path.join("models", f"{model_run.model_name}.keras")
+        if not os.path.exists(model_path):
+            print(f"❌ Error: Model file not found at {model_path}")   
+            return
+        # The generic Keras components work here too! The Conv1D layer is part of the saved model.
+        ts_model = KerasTimeSeriesModel(model_path=model_path)
+        model_adapter = KerasTimeSeriesAdapter(model=ts_model)
+        evaluator = MeanSquaredErrorEvaluator()
+    elif model_run.model_type == "time_series_rnn":
+        model_path = os.path.join("models", f"{model_run.model_name}.keras")
+        if not os.path.exists(model_path):
+            print(f"❌ Error: Model file not found at {model_path}")   
+            return
+        # The generic Keras components handle the wide input window for the RNN.
+        ts_model = KerasTimeSeriesModel(model_path=model_path)
+        model_adapter = KerasTimeSeriesAdapter(model=ts_model)
         evaluator = MeanSquaredErrorEvaluator()
     elif model_run.model_type == "baseline_time_series":
         model_path = os.path.join("models", f"{model_run.model_name}.keras")
@@ -72,7 +117,7 @@ def main():
             print(f"❌ Error: Model file not found at {model_path}")
             return
         
-        baseline_model = lineTimeSeriesModel(model_path=model_path)
+        baseline_model = BaselineTimeSeriesModel(model_path=model_path)
         model_adapter = BaselineTimeSeriesAdapter(model=baseline_model)
         evaluator = MeanSquaredErrorEvaluator()
     else:
