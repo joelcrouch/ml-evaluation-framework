@@ -1,0 +1,12 @@
+The `seed_ts_test_cases.py` script failed to create any TestCases, returning a 500 Internal Server Error for each attempt. This indicates a problem on the FastAPI server side when processing the new time series `TestCase` payloads.
+
+I need to debug the FastAPI server. The process is similar to when we debugged the `seed_cv_test_cases.py` issue.
+
+My plan:
+1.  **Please stop the FastAPI server** that is currently running in your terminal by pressing `CTRL+C`.
+2.  Once the server is stopped, o **restart the FastAPI server in the foreground** so I can see its logs.
+3.  After the server is running in the foreground, **run `scripts/seed_ts_test_cases.py` again** in a separate terminal.
+4.  When the seeding script runs, the FastAPI server in the other terminal should output a detailed traceback. **look at the entire error message from the server log and analyze it.**
+
+This will tell me exactly what's going on inside the server and allow me to fix it.
+

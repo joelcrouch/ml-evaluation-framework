@@ -26,6 +26,11 @@ dependencies:
   - uvicorn
   - fastapi
   - pydantic
+  
+  # --- GPU Support (CUDA/cuDNN) ---
+  # - cudatoolkit=11.8
+  # - cudnn=8.6
+  
 
   # --- Supplementary Pip Packages ---
   - pip:
@@ -34,6 +39,7 @@ dependencies:
     - click     # For the CLI interface (Sprint 1/2)
     - python-dotenv # For loading environment variables (.env)
     - typing-extensions # For compatibility with older Python versions (if needed)
-    - tensorflow
+    # - tensorflow==2.13.0  # Compatible with CUDA 11.8
+    - tensorflow[and-cuda]
     - tensorflow-datasets
     - requests
