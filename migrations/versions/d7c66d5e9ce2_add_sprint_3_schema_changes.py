@@ -1,7 +1,7 @@
-"""Add Sprint 3 schema changes
+"""Initial schema with all Sprint 1-3 tables
 
 Revision ID: d7c66d5e9ce2
-Revises: 6b831d2c3e57
+Revises:
 Create Date: 2025-12-16 20:27:47.071529
 
 """
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = 'd7c66d5e9ce2'
-down_revision: Union[str, Sequence[str], None] = '6b831d2c3e57'
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
