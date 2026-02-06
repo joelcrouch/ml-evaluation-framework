@@ -264,9 +264,9 @@ The baseline model's performance establishes the minimum bar that more sophistic
 ## Next Steps: Evaluating More Complex Models
 
 After establishing the baseline, you can train and evaluate more sophisticated models from the TensorFlow tutorial:
-- **Linear Model**: Single dense layer
-- **Dense Model**: Multi-layer neural network
-- **CNN Model**: Convolutional neural network
+- **Linear Model**: Single dense layer (added)
+- **Dense Model**: Multi-layer neural network  (added)
+- **CNN Model**: Convolutional neural network  (added)
 - **RNN Model**: Recurrent neural network (LSTM)
 - These will have essentially the same methods, with some tweaks to make them work. GOAL: Have an abadstracted function(s) that can run any time-series, or just leave them as examples for how to create the proper adaptor/model/seed scripts.
 

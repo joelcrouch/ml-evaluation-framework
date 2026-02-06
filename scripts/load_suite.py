@@ -1,58 +1,130 @@
+"""Load a test suite into the ML Evaluation Framework database."""
 import argparse
-import json
 import os
 import sys
 
 # Add project root to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# --- Configuration ---
-# Assuming the FastAPI service is running locally
-API_URL = "http://localhost:8000/api/v1/prompts/"
+from ml_eval.test_suite import TestSuiteManager
+from ml_eval.database.connection import get_db
 
-def load_and_parse_test_suite(file_path: str):
-    """
-    Loads and parses a test suite from a given JSON file.
-    Performs initial validation based on Story 1 Go/No-Go criteria.
-    """
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Test suite file not found at: {file_path}")
-
-    # For now, we only support JSON as per our initial format definition.
-    # Future enhancement will add YAML.
-    try:
-        with open(file_path, 'r') as f:
-            test_cases = json.load(f)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON format in file {file_path}: {e}")
-    except Exception as e:
-        raise Exception(f"Error reading or parsing file {file_path}: {e}")
-
-    if not isinstance(test_cases, list):
-        raise ValueError(f"Test suite file {file_path} must contain a top-level JSON array (list of test cases).")
-
-    return test_cases
 
 def main():
-    parser = argparse.ArgumentParser(description="Load a test suite into the evaluation platform.")
-    parser.add_argument("file_path", type=str, help="Path to the test suite JSON file.")
+    """Main function to load test suites from files."""
+    parser = argparse.ArgumentParser(
+        description="Load a test suite into the ML Evaluation Framework.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Load JSON test suite
+  python scripts/load_suite.py data/example_suite.json
+
+  # Load YAML test suite
+  python scripts/load_suite.py data/example_suite.yaml
+
+  # Skip duplicate test cases
+  python scripts/load_suite.py data/example_suite.json --skip-duplicates
+
+  # Include invalid test cases (not recommended)
+  python scripts/load_suite.py data/example_suite.json --include-invalid
+        """
+    )
+    parser.add_argument(
+        "file_path",
+        type=str,
+        help="Path to the test suite file (JSON or YAML)"
+    )
+    parser.add_argument(
+        "--skip-duplicates",
+        action="store_true",
+        help="Skip test cases that already exist in the database"
+    )
+    parser.add_argument(
+        "--include-invalid",
+        action="store_true",
+        help="Attempt to save invalid test cases (may fail)"
+    )
+
     args = parser.parse_args()
 
+    # Initialize manager
+    manager = TestSuiteManager()
+
     try:
-        test_cases = load_and_parse_test_suite(args.file_path)
-        
+        # Step 1: Load test suite from file
+        print(f"📂 Loading test suite from: {args.file_path}")
+        test_cases = manager.load_from_file(args.file_path)
+
         if not test_cases:
-            print(f"⚠️  Warning: Test suite file '{args.file_path}' is empty. No test cases to load.")
+            print("⚠️  Warning: Test suite file is empty. No test cases to load.")
             sys.exit(0)
 
-        print(f"✅ Successfully parsed {len(test_cases)} test cases from '{args.file_path}'.")
-        print("--- (Next step: Implement database interaction to add these test cases) ---")
-        # In future steps, this is where we'd add database interaction.
-        # For now, just confirming parsing success.
+        print(f"✅ Successfully loaded {len(test_cases)} test cases")
 
-    except (FileNotFoundError, ValueError, Exception) as e:
-        print(f"❌ Error loading test suite: {e}")
-        sys.exit(1)
+        # Step 2: Extract metadata
+        metadata = manager.get_suite_metadata(test_cases)
+        print("\n📊 Suite Metadata:")
+        print(f"  - Suite Name:    {metadata.get('suite_name') or 'N/A'}")
+        print(f"  - Suite Version: {metadata.get('suite_version') or 'N/A'}")
+        print(f"  - Total Cases:   {metadata['total_cases']}")
+        print(f"  - Model Types:   {', '.join(metadata['model_types'])}")
+        if metadata['tags']:
+            print(f"  - Tags:          {', '.join(metadata['tags'])}")
+
+        # Step 3: Validate test suite
+        print("\n🔍 Validating test suite...")
+        validation_report = manager.validate_suite(test_cases)
+
+        # Step 4: Get database session
+        db_session = next(get_db())
+
+        try:
+            # Step 5: Save to database
+            print("\n💾 Saving test cases to database...")
+            save_stats = manager.save_to_database(
+                test_cases=test_cases,
+                db_session=db_session,
+                skip_duplicates=args.skip_duplicates,
+                skip_invalid=not args.include_invalid
+            )
+
+            # Update report with duplicate count
+            validation_report.duplicate_count = save_stats["skipped_duplicate"]
+
+            # Step 6: Print results
+            print("\n" + validation_report.render())
+
+            print(f"\n💾 Database Save Results:")
+            print(f"  - Saved:             {save_stats['saved']}")
+            print(f"  - Skipped (invalid): {save_stats['skipped_invalid']}")
+            print(f"  - Skipped (duplicate): {save_stats['skipped_duplicate']}")
+
+            # Determine exit code
+            if validation_report.has_critical_errors():
+                print("\n⚠️  Test suite loaded with validation errors.")
+                if save_stats['saved'] > 0:
+                    print(f"✅ {save_stats['saved']} valid test cases were saved to the database.")
+                sys.exit(1)  # Exit with error if there were validation issues
+            else:
+                print(f"\n✅ Success! All {save_stats['saved']} test cases loaded successfully.")
+                sys.exit(0)
+
+        finally:
+            db_session.close()
+
+    except FileNotFoundError as e:
+        print(f"\n❌ File Error: {e}")
+        sys.exit(2)
+    except ValueError as e:
+        print(f"\n❌ Validation Error: {e}")
+        sys.exit(2)
+    except Exception as e:
+        print(f"\n❌ Fatal Error: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(2)
+
 
 if __name__ == "__main__":
     main()

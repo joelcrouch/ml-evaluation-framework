@@ -282,6 +282,639 @@ docker exec -it ml_eval_postgres psql -U ml_user -d ml_eval_db
 # Exit
 \q
 ```
+## HAD SOME issues
+```
+ curl -X 'POST' 'http://localhost:8000/api/v1/prompts/' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "test_case_name": "Manual Test",
+    "model_type": "nlp",
+    "input_type": "text",
+    "output_type": "classification",
+    "input_data": {"text": "Hello"},
+    "ground_truth": {"label": "greeting"}
+  }'
+Internal Server Error(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ a^C
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ alembic current
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+d7c66d5e9ce2 (head)
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker exec -it ml_eval_postgres psql -U ml_user -d ml_eval_db -c "\dt"
+             List of relations
+ Schema |      Name       | Type  |  Owner  
+--------+-----------------+-------+---------
+ public | alembic_version | table | ml_user
+(1 row)
+
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker exec -it ml_eval_postgres psql -U ml_user -d ml_eval_db -c "\dt"
+           List of relations
+ Schema |    Name     | Type  |  Owner  
+--------+-------------+-------+---------
+ public | evaluations | table | ml_user
+ public | model_runs  | table | ml_user
+ public | responses   | table | ml_user
+ public | test_cases  | table | ml_user
+             List of relations
+ Schema |      Name       | Type  |  Owner  
+--------+-----------------+-------+---------
+ public | alembic_version | table | ml_user
+(1 row)
+
+Command 'List' not found, did you mean:
+  command 'mist' from snap mist (master)
+  command 'dist' from deb mmh (0.4-6)
+  command 'dist' from deb nmh (1.8-1)
+  command 'gist' from deb yorick (2.2.04+dfsg1-12)
+  command 'hist' from deb loki (2.4.7.4-10)
+See 'snap info <snapname>' for additional versions.
+Schema: command not found
+Type: command not found
+Command 'Name' not found, did you mean:
+  command 'mame' from snap mame (mame0285)
+  command 'lame' from deb lame (3.100-6)
+  command 'mame' from deb mame (0.261+dfsg.1-1)
+See 'snap info <snapname>' for additional versions.
+Owner: command not found
+--------+-------------+-------+---------: command not found
+evaluations: command not found
+ml_user: command not found
+Command 'table' not found, but can be installed with:
+sudo snap install table
+public: command not found
+Command 'table' not found, but can be installed with:
+sudo snap install table
+ml_user: command not found
+model_runs: command not found
+public: command not found
+public: command not found
+ml_user: command not found
+responses: command not found
+Command 'table' not found, but can be installed with:
+sudo snap install table
+public: command not found
+ml_user: command not found
+Command 'table' not found, but can be installed with:
+sudo snap install table
+test_cases: command not found
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker exec -it ml_eval_postgres psql -U ml_user -d ml_eval_db -c "\dt"
+             List of relations
+ Schema |      Name       | Type  |  Owner  
+--------+-----------------+-------+---------
+ public | alembic_version | table | ml_user
+(1 row)
+
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ alembic downgrade base
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade d7c66d5e9ce2 -> 6b831d2c3e57, Add Sprint 3 schema changes
+Traceback (most recent call last):
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.UndefinedObject: index "ix_evaluations_response_id" does not exist
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/bin/alembic", line 10, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/config.py", line 1047, in main
+    CommandLine(prog=prog).main(argv=argv)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/config.py", line 1037, in main
+    self.run_cmd(cfg, options)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/config.py", line 971, in run_cmd
+    fn(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/command.py", line 530, in downgrade
+    script.run_env()
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/script/base.py", line 545, in run_env
+    util.load_python_file(self.dir, "env.py")
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/util/pyfiles.py", line 116, in load_python_file
+    module = load_module_py(module_id, path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/util/pyfiles.py", line 136, in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/env.py", line 78, in <module>
+    run_migrations_online()
+  File "/home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/env.py", line 73, in run_migrations_online
+    context.run_migrations()
+  File "<string>", line 8, in run_migrations
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/runtime/environment.py", line 969, in run_migrations
+    self.get_context().run_migrations(**kw)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/runtime/migration.py", line 626, in run_migrations
+    step.migration_fn(**kw)
+  File "/home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/versions/d7c66d5e9ce2_add_sprint_3_schema_changes.py", line 102, in downgrade
+    op.drop_index(op.f('ix_evaluations_response_id'), table_name='evaluations')
+  File "<string>", line 8, in drop_index
+  File "<string>", line 3, in drop_index
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/operations/ops.py", line 1142, in drop_index
+    return operations.invoke(op)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/operations/base.py", line 454, in invoke
+    return fn(self, operation)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/operations/toimpl.py", line 121, in drop_index
+    operations.impl.drop_index(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/ddl/impl.py", line 478, in drop_index
+    self._exec(schema.DropIndex(index, **kw))
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/ddl/impl.py", line 256, in _exec
+    return conn.execute(construct, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+           ^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/sql/ddl.py", line 187, in _execute_on_connection
+    return connection._execute_ddl(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1530, in _execute_ddl
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedObject) index "ix_evaluations_response_id" does not exist
+
+[SQL: 
+DROP INDEX ix_evaluations_response_id]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ alembic upgrade head
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 668bc8211f5e, Initial schema
+INFO  [alembic.runtime.migration] Running upgrade 668bc8211f5e -> 6b831d2c3e57, Add unique constraint to responses table
+Traceback (most recent call last):
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.DuplicateTable: relation "model_runs" already exists
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/bin/alembic", line 10, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/config.py", line 1047, in main
+    CommandLine(prog=prog).main(argv=argv)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/config.py", line 1037, in main
+    self.run_cmd(cfg, options)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/config.py", line 971, in run_cmd
+    fn(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/command.py", line 483, in upgrade
+    script.run_env()
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/script/base.py", line 545, in run_env
+    util.load_python_file(self.dir, "env.py")
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/util/pyfiles.py", line 116, in load_python_file
+    module = load_module_py(module_id, path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/util/pyfiles.py", line 136, in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/env.py", line 78, in <module>
+    run_migrations_online()
+  File "/home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/env.py", line 73, in run_migrations_online
+    context.run_migrations()
+  File "<string>", line 8, in run_migrations
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/runtime/environment.py", line 969, in run_migrations
+    self.get_context().run_migrations(**kw)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/runtime/migration.py", line 626, in run_migrations
+    step.migration_fn(**kw)
+  File "/home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/versions/6b831d2c3e57_add_unique_constraint_to_responses_table.py", line 24, in upgrade
+    op.create_table('model_runs',
+  File "<string>", line 8, in create_table
+  File "<string>", line 3, in create_table
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/operations/ops.py", line 1332, in create_table
+    return operations.invoke(op)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/operations/base.py", line 454, in invoke
+    return fn(self, operation)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/operations/toimpl.py", line 135, in create_table
+    operations.impl.create_table(table, **kw)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/ddl/impl.py", line 437, in create_table
+    self._exec(schema.CreateTable(table, **kw))
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/ddl/impl.py", line 256, in _exec
+    return conn.execute(construct, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+           ^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/sql/ddl.py", line 187, in _execute_on_connection
+    return connection._execute_ddl(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1530, in _execute_ddl
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.ProgrammingError: (psycopg2.errors.DuplicateTable) relation "model_runs" already exists
+
+[SQL: 
+CREATE TABLE model_runs (
+	id SERIAL NOT NULL, 
+	model_name VARCHAR NOT NULL, 
+	model_version VARCHAR NOT NULL, 
+	started_at TIMESTAMP WITHOUT TIME ZONE, 
+	finished_at TIMESTAMP WITHOUT TIME ZONE, 
+	PRIMARY KEY (id)
+)
+
+]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker exec ml_eval_postgres psql -U ml_user -d ml_eval_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT 
+  ALL ON SCHEMA public TO ml_user; GRANT ALL ON SCHEMA public TO public;"
+NOTICE:  drop cascades to table alembic_version
+DROP SCHEMA
+CREATE SCHEMA
+GRANT
+GRANT
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ alembic upgrade head
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 668bc8211f5e, Initial schema
+INFO  [alembic.runtime.migration] Running upgrade 668bc8211f5e -> 6b831d2c3e57, Add unique constraint to responses table
+Traceback (most recent call last):
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.DuplicateTable: relation "model_runs" already exists
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/bin/alembic", line 10, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/config.py", line 1047, in main
+    CommandLine(prog=prog).main(argv=argv)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/config.py", line 1037, in main
+    self.run_cmd(cfg, options)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/config.py", line 971, in run_cmd
+    fn(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/command.py", line 483, in upgrade
+    script.run_env()
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/script/base.py", line 545, in run_env
+    util.load_python_file(self.dir, "env.py")
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/util/pyfiles.py", line 116, in load_python_file
+    module = load_module_py(module_id, path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/util/pyfiles.py", line 136, in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/env.py", line 78, in <module>
+    run_migrations_online()
+  File "/home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/env.py", line 73, in run_migrations_online
+    context.run_migrations()
+  File "<string>", line 8, in run_migrations
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/runtime/environment.py", line 969, in run_migrations
+    self.get_context().run_migrations(**kw)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/runtime/migration.py", line 626, in run_migrations
+    step.migration_fn(**kw)
+  File "/home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/versions/6b831d2c3e57_add_unique_constraint_to_responses_table.py", line 24, in upgrade
+    op.create_table('model_runs',
+  File "<string>", line 8, in create_table
+  File "<string>", line 3, in create_table
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/operations/ops.py", line 1332, in create_table
+    return operations.invoke(op)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/operations/base.py", line 454, in invoke
+    return fn(self, operation)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/operations/toimpl.py", line 135, in create_table
+    operations.impl.create_table(table, **kw)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/ddl/impl.py", line 437, in create_table
+    self._exec(schema.CreateTable(table, **kw))
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/ddl/impl.py", line 256, in _exec
+    return conn.execute(construct, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+           ^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/sql/ddl.py", line 187, in _execute_on_connection
+    return connection._execute_ddl(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1530, in _execute_ddl
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.ProgrammingError: (psycopg2.errors.DuplicateTable) relation "model_runs" already exists
+
+[SQL: 
+CREATE TABLE model_runs (
+	id SERIAL NOT NULL, 
+	model_name VARCHAR NOT NULL, 
+	model_version VARCHAR NOT NULL, 
+	started_at TIMESTAMP WITHOUT TIME ZONE, 
+	finished_at TIMESTAMP WITHOUT TIME ZONE, 
+	PRIMARY KEY (id)
+)
+
+]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker ps
+CONTAINER ID   IMAGE                COMMAND                  CREATED          STATUS          PORTS                                         NAMES
+820590a54d06   postgres:15-alpine   "docker-entrypoint.s…"   26 minutes ago   Up 26 minutes   0.0.0.0:5433->5432/tcp, [::]:5433->5432/tcp   ml_eval_postgres
+f0da256e8dc7   postgres:16          "docker-entrypoint.s…"   2 weeks ago      Up 27 hours     0.0.0.0:6432->5432/tcp, [::]:6432->5432/tcp   pythoncrud-db-1
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker compose down -v
+WARN[0000] /home/dell-linux-dev3/Projects/ml-evaluation-framework/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+[+] down 3/3
+ ✔ Container ml_eval_postgres                   Removed                                                                  0.3s
+ ✔ Volume ml-evaluation-framework_postgres_data Removed                                                                  0.0s
+ ✔ Network ml-evaluation-framework_default      Removed                                                                  0.2s
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker ps
+CONTAINER ID   IMAGE         COMMAND                  CREATED       STATUS        PORTS                                         NAMES
+f0da256e8dc7   postgres:16   "docker-entrypoint.s…"   2 weeks ago   Up 27 hours   0.0.0.0:6432->5432/tcp, [::]:6432->5432/tcp   pythoncrud-db-1
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker compose up -d
+WARN[0000] /home/dell-linux-dev3/Projects/ml-evaluation-framework/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+[+] up 3/3
+ ✔ Network ml-evaluation-framework_default      Created                                                                  0.0s
+ ✔ Volume ml-evaluation-framework_postgres_data Created                                                                  0.0s
+ ✔ Container ml_eval_postgres                   Created                                                                  0.1s
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker ps
+CONTAINER ID   IMAGE                COMMAND                  CREATED          STATUS          PORTS                                         NAMES
+1f27d5a7a0d2   postgres:15-alpine   "docker-entrypoint.s…"   13 seconds ago   Up 12 seconds   0.0.0.0:5433->5432/tcp, [::]:5433->5432/tcp   ml_eval_postgres
+f0da256e8dc7   postgres:16          "docker-entrypoint.s…"   2 weeks ago      Up 27 hours     0.0.0.0:6432->5432/tcp, [::]:6432->5432/tcp   pythoncrud-db-1
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker ps | grep ml_eval_postgres
+1f27d5a7a0d2   postgres:15-alpine   "docker-entrypoint.s…"   28 seconds ago   Up 28 seconds   0.0.0.0:5433->5432/tcp, [::]:5433->5432/tcp   ml_eval_postgres
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker ps
+CONTAINER ID   IMAGE                COMMAND                  CREATED          STATUS          PORTS                                         NAMES
+1f27d5a7a0d2   postgres:15-alpine   "docker-entrypoint.s…"   42 seconds ago   Up 42 seconds   0.0.0.0:5433->5432/tcp, [::]:5433->5432/tcp   ml_eval_postgres
+f0da256e8dc7   postgres:16          "docker-entrypoint.s…"   2 weeks ago      Up 27 hours     0.0.0.0:6432->5432/tcp, [::]:6432->5432/tcp   pythoncrud-db-1
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ alembic upgrade head
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 668bc8211f5e, Initial schema
+INFO  [alembic.runtime.migration] Running upgrade 668bc8211f5e -> 6b831d2c3e57, Add unique constraint to responses table
+Traceback (most recent call last):
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.DuplicateTable: relation "model_runs" already exists
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/bin/alembic", line 10, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/config.py", line 1047, in main
+    CommandLine(prog=prog).main(argv=argv)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/config.py", line 1037, in main
+    self.run_cmd(cfg, options)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/config.py", line 971, in run_cmd
+    fn(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/command.py", line 483, in upgrade
+    script.run_env()
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/script/base.py", line 545, in run_env
+    util.load_python_file(self.dir, "env.py")
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/util/pyfiles.py", line 116, in load_python_file
+    module = load_module_py(module_id, path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/util/pyfiles.py", line 136, in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/env.py", line 78, in <module>
+    run_migrations_online()
+  File "/home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/env.py", line 73, in run_migrations_online
+    context.run_migrations()
+  File "<string>", line 8, in run_migrations
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/runtime/environment.py", line 969, in run_migrations
+    self.get_context().run_migrations(**kw)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/runtime/migration.py", line 626, in run_migrations
+    step.migration_fn(**kw)
+  File "/home/dell-linux-dev3/Projects/ml-evaluation-framework/migrations/versions/6b831d2c3e57_add_unique_constraint_to_responses_table.py", line 24, in upgrade
+    op.create_table('model_runs',
+  File "<string>", line 8, in create_table
+  File "<string>", line 3, in create_table
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/operations/ops.py", line 1332, in create_table
+    return operations.invoke(op)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/operations/base.py", line 454, in invoke
+    return fn(self, operation)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/operations/toimpl.py", line 135, in create_table
+    operations.impl.create_table(table, **kw)
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/ddl/impl.py", line 437, in create_table
+    self._exec(schema.CreateTable(table, **kw))
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/alembic/ddl/impl.py", line 256, in _exec
+    return conn.execute(construct, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+           ^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/sql/ddl.py", line 187, in _execute_on_connection
+    return connection._execute_ddl(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1530, in _execute_ddl
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/dell-linux-dev3/anaconda3/envs/ml-eval-framework/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.ProgrammingError: (psycopg2.errors.DuplicateTable) relation "model_runs" already exists
+
+[SQL: 
+CREATE TABLE model_runs (
+	id SERIAL NOT NULL, 
+	model_name VARCHAR NOT NULL, 
+	model_version VARCHAR NOT NULL, 
+	started_at TIMESTAMP WITHOUT TIME ZONE, 
+	finished_at TIMESTAMP WITHOUT TIME ZONE, 
+	PRIMARY KEY (id)
+)
+
+]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker ps
+CONTAINER ID   IMAGE                COMMAND                  CREATED         STATUS         PORTS                                         NAMES
+1f27d5a7a0d2   postgres:15-alpine   "docker-entrypoint.s…"   2 minutes ago   Up 2 minutes   0.0.0.0:5433->5432/tcp, [::]:5433->5432/tcp   ml_eval_postgres
+f0da256e8dc7   postgres:16          "docker-entrypoint.s…"   2 weeks ago     Up 27 hours    0.0.0.0:6432->5432/tcp, [::]:6432->5432/tcp   pythoncrud-db-1
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$  docker exec ml_eval_postgres psql -U ml_user -d ml_eval_db -c "CREATE TABLE IF NOT EXISTS alembic_version (version_num 
+  VARCHAR(32) NOT NULL, CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num)); INSERT INTO alembic_version 
+  (version_num) VALUES ('d7c66d5e9ce2');"
+CREATE TABLE
+INSERT 0 1
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker exec ml_eval_postgres psql -U ml_user -d ml_eval_db <<'EOF'
+> ^C
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker exec ml_eval_postgres psql -U ml_user -d ml_eval_db <<'EOF'
+  -- This is the content from d7c66d5e9ce2 migration
+  CREATE TABLE model_runs (
+      id SERIAL NOT NULL,
+      model_name VARCHAR NOT NULL,
+      model_version VARCHAR NOT NULL,
+      model_type VARCHAR NOT NULL,
+      model_endpoint VARCHAR,
+      config JSONB,
+      started_at TIMESTAMP,
+      completed_at TIMESTAMP,
+      status VARCHAR,
+      total_cases INTEGER,
+      completed_cases INTEGER,
+      failed_cases INTEGER,
+      PRIMARY KEY (id)
+  );
+  CREATE INDEX ix_model_runs_id ON model_runs (id);
+  CREATE INDEX ix_model_runs_model_name ON model_runs (model_name);
+
+  CREATE TABLE test_cases (
+      id SERIAL NOT NULL,
+      test_case_name VARCHAR NOT NULL,
+  EOFATE INDEX ix_evaluations_response_id ON evaluations (response_id);me);
+> ^C
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker exec ml_eval_postgres psql -U ml_user -d ml_eval_db <<'EOF'
+  -- This is the content from d7c66d5e9ce2 migration
+  CREATE TABLE model_runs (
+      id SERIAL NOT NULL,
+      model_name VARCHAR NOT NULL,
+      model_version VARCHAR NOT NULL,
+      model_type VARCHAR NOT NULL,
+      model_endpoint VARCHAR,
+      config JSONB,
+      started_at TIMESTAMP,
+      completed_at TIMESTAMP,
+      status VARCHAR,
+      total_cases INTEGER,
+      completed_cases INTEGER,
+      failed_cases INTEGER,
+      PRIMARY KEY (id)
+  );
+  CREATE INDEX ix_model_runs_id ON model_runs (id);
+  CREATE INDEX ix_model_runs_model_name ON model_runs (model_name);
+
+  CREATE TABLE test_cases (
+      id SERIAL NOT NULL,
+      test_case_name VARCHAR NOT NULL,
+  EOFATE INDEX ix_evaluations_response_id ON evaluations (response_id);me);
+> 
+> epf
+> eof
+> EOF
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker exec ml_eval_postgres psql -U ml_user -d ml_eval_db -c "\dt"
+             List of relations
+ Schema |      Name       | Type  |  Owner  
+--------+-----------------+-------+---------
+ public | alembic_version | table | ml_user
+(1 row)
+
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker exec ml_eval_postgres psql -U ml_user -d ml_eval_db -c "\dt"^C
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker exec -i ml_eval_postgres psql -U ml_user -d ml_eval_db < create_tables.sql
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ docker exec ml_eval_postgres psql -U ml_user -d ml_eval_db -c "\dt"
+             List of relations
+ Schema |      Name       | Type  |  Owner  
+--------+-----------------+-------+---------
+ public | alembic_version | table | ml_user
+ public | evaluations     | table | ml_user
+ public | model_runs      | table | ml_user
+ public | responses       | table | ml_user
+ public | test_cases      | table | ml_user
+(5 rows)
+
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ alembic current
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+d7c66d5e9ce2 (head)
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ curl -X 'POST' 'http://localhost:8000/api/v1/prompts/' \
+    -H 'Content-Type: application/json' \
+    -d '{
+      "test_case_name": "Manual Test",
+      "model_type": "nlp",
+      "input_type": "text",
+      "output_type": "classification",
+      "input_data": {"text": "Hello"},
+      "ground_truth": {"label": "greeting"}
+    }'
+{"test_case_name":"Manual Test","model_type":"nlp","input_type":"text","output_type":"classification","input_data":{"text":"Hello"},"ground_truth":{"label":"greeting"},"category":null,"tags":null,"difficulty":null,"origin":"human","is_verified":true,"test_case_metadata":{},"created_by":null,"id":1,"created_at":"2026-02-05T20:48:17.414761","updated_at":"2026-02-05T20:48:17.(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ murl -X 'GET' 'http://localhost:8000/api/v1/prompts/1'ompts/1'
+Command 'Curl' not found, did you mean:
+  command 'yurl' from snap yurl (v0.6.3)
+  command 'curl' from snap curl (8.18.0)
+  command 'surl' from snap surl (0.8.0)
+  command 'zurl' from deb zurl (1.12.0-1)
+  command 'curl' from deb curl (8.5.0-2ubuntu10.6)
+See 'snap info <snapname>' for additional versions.
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ curl -X 'GET' 'http://localhost:8000/api/v1/prompts/1'
+{"test_case_name":"Manual Test","model_type":"nlp","input_type":"text","output_type":"classification","input_data":{"text":"Hello"},"ground_truth":{"label":"greeting"},"category":null,"tags":null,"difficulty":null,"origin":"human","is_verified":true,"test_case_metadata":{},"created_by":null,"id":1,"created_at":"2026-02-05T20:48:17.414761","updated_at":"2026-02-05T20:48:17.(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ curl -X 'PATCH' 'http://localhost:8000/api/v1/prompts/1' \pts/1' \
+  -H 'Content-Type: application/json' \
+  -d '{"test_case_name": "Updated Name"}'
+{"test_case_name":"Updated Name","model_type":"nlp","input_type":"text","output_type":"classification","input_data":{"text":"Hello"},"ground_truth":{"label":"greeting"},"category":null,"tags":null,"difficulty":null,"origin":"human","is_verified":true,"test_case_metadata":{},"created_by":null,"id":1,"created_at":"2026-02-05T20:48:17.414761","updated_at":"2026-02-05T20:51:11.850406"}(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ curl -X 'PATCH' 'http://localhost:8000/api/v1/prompts/1'   -H 'Content-Type: application/json'   -d '{"test_case_name": "Updated Name"}'
+{"test_case_name":"Updated Name","model_type":"nlp","input_type":"text","output_type":"classification","input_data":{"text":"Hello"},"ground_truth":{"label":"greeting"},"category":null,"tags":null,"difficulty":null,"origin":"human","is_verified":true,"test_case_metadata":{},"created_by":null,"id":1,"created_at":"2026-02-05T20:48:17.414761","updated_at":"2026-02-05T20:51:24(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ curl -X 'DELETE' 'http://localhost:8000/api/v1/prompts/1'rompts/1'
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ curl -X 'GET' 'http://localhost:8000/api/v1/prompts/1'
+{"detail":"Prompt not found"}(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision
+```
+
+What Was Fixed
+
+  1. Removed conflicting migrations: Deleted two old migrations that were creating duplicate tables with wrong names
+  2. Updated the remaining migration: Changed d7c66d5e9ce2 to be the initial migration (down_revision = None)
+  3. Database is clean: All tables created correctly with proper schema
+
+
 
 #### 2. Test API Endpoints Manually
 
@@ -317,6 +950,36 @@ curl -X 'DELETE' 'http://localhost:8000/api/v1/prompts/1'
 # Verify deletion (should return 404)
 curl -X 'GET' 'http://localhost:8000/api/v1/prompts/1'
 ```
+EXAMPLE OUTPUT:
+```
+ curl -X 'POST' 'http://localhost:8000/api/v1/prompts/' \
+    -H 'Content-Type: application/json' \
+    -d '{
+      "test_case_name": "Manual Test",
+      "model_type": "nlp",
+      "input_type": "text",
+      "output_type": "classification",
+      "input_data": {"text": "Hello"},
+      "ground_truth": {"label": "greeting"}
+    }'
+{"test_case_name":"Manual Test","model_type":"nlp","input_type":"text","output_type":"classification","input_data":{"text":"Hello"},"ground_truth":{"label":"greeting"},"category":null,"tags":null,"difficulty":null,"origin":"human","is_verified":true,"test_case_metadata":{},"created_by":null,"id":1,"created_at":"2026-02-05T20:48:17.414761","updated_at":"2026-02-05T20:48:17.(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ murl -X 'GET' 'http://localhost:8000/api/v1/prompts/1'ompts/1'
+Command 'Curl' not found, did you mean:
+  command 'yurl' from snap yurl (v0.6.3)
+  command 'curl' from snap curl (8.18.0)
+  command 'surl' from snap surl (0.8.0)
+  command 'zurl' from deb zurl (1.12.0-1)
+  command 'curl' from deb curl (8.5.0-2ubuntu10.6)
+See 'snap info <snapname>' for additional versions.
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ curl -X 'GET' 'http://localhost:8000/api/v1/prompts/1'
+{"test_case_name":"Manual Test","model_type":"nlp","input_type":"text","output_type":"classification","input_data":{"text":"Hello"},"ground_truth":{"label":"greeting"},"category":null,"tags":null,"difficulty":null,"origin":"human","is_verified":true,"test_case_metadata":{},"created_by":null,"id":1,"created_at":"2026-02-05T20:48:17.414761","updated_at":"2026-02-05T20:48:17.(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ curl -X 'PATCH' 'http://localhost:8000/api/v1/prompts/1' \pts/1' \
+  -H 'Content-Type: application/json' \
+  -d '{"test_case_name": "Updated Name"}'
+{"test_case_name":"Updated Name","model_type":"nlp","input_type":"text","output_type":"classification","input_data":{"text":"Hello"},"ground_truth":{"label":"greeting"},"category":null,"tags":null,"difficulty":null,"origin":"human","is_verified":true,"test_case_metadata":{},"created_by":null,"id":1,"created_at":"2026-02-05T20:48:17.414761","updated_at":"2026-02-05T20:51:11.850406"}(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ curl -X 'PATCH' 'http://localhost:8000/api/v1/prompts/1'   -H 'Content-Type: application/json'   -d '{"test_case_name": "Updated Name"}'
+{"test_case_name":"Updated Name","model_type":"nlp","input_type":"text","output_type":"classification","input_data":{"text":"Hello"},"ground_truth":{"label":"greeting"},"category":null,"tags":null,"difficulty":null,"origin":"human","is_verified":true,"test_case_metadata":{},"created_by":null,"id":1,"created_at":"2026-02-05T20:48:17.414761","updated_at":"2026-02-05T20:51:24(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ curl -X 'DELETE' 'http://localhost:8000/api/v1/prompts/1'rompts/1'
+(ml-eval-framework) dell-linux-dev3@dell-linux-dev3-Precision-3591:~/Projects/ml-evaluation-framework$ curl -X 'GET' 'http://localhost:8000/api/v1/prompts/1'
+
+```
+
 
 ### Sprint 1 Success Criteria
 
