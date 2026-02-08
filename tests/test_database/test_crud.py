@@ -2,44 +2,66 @@ import pytest
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from sqlalchemy import text, create_engine
+from alembic.config import Config
+from alembic import command
+from pathlib import Path
+import os
 
-# Assuming a fixture setup for the database session
-# You would typically define 'test_db' fixture in conftest.py
-# For this example, we mock a database dependency:
 from ml_eval.database.crud import (
     create_prompt, get_prompt, get_prompts_by_model_type, get_model_run,
     create_model_run, complete_model_run,
     create_response,
     create_evaluation, get_evaluations_for_response
 )
-from ml_eval.database.connection import SessionLocal
-from ml_eval.database.models import Base
 
 # --- Pytest Fixtures Setup ---
-# You need a way to connect to your test database.
-# In a real project, this would use a dedicated test database URL.
+# Uses Alembic migrations to create test database schema
+
+# Test Database Configuration
+db_user = os.getenv("POSTGRES_USER", "ml_user")
+db_password = os.getenv("POSTGRES_PASSWORD", "ml_password")
+db_host = "localhost"
+db_port = os.getenv("POSTGRES_PORT", "5433")
+db_name = os.getenv("POSTGRES_DB", "ml_eval_db") + "_test"
+TEST_DATABASE_URL = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 @pytest.fixture(scope="session")
 def db_engine():
     """Engine used across all tests in the session."""
-    # Use the existing engine, but we'll manage the lifecycle
-    return SessionLocal().bind
+    return create_engine(TEST_DATABASE_URL)
 
 @pytest.fixture(scope="function")
 def test_db(db_engine):
-    """Provides a fresh database session for each test."""
-    # 1. Create all tables before the test runs
-    Base.metadata.create_all(bind=db_engine)
-    
-    # 2. Start the session
+    """
+    Provides a fresh database session for each test, using Alembic migrations.
+
+    IMPORTANT: Uses Alembic migrations to create schema, ensuring tests run
+    against the same schema as dev/prod. This prevents schema drift.
+    """
+    # Get database URL for Alembic
+    db_url = TEST_DATABASE_URL
+
+    # Set up Alembic configuration
+    project_root = Path(__file__).parent.parent.parent
+    alembic_cfg = Config(str(project_root / "alembic.ini"))
+    alembic_cfg.set_main_option("sqlalchemy.url", db_url)
+
+    # Run migrations to create schema
+    command.upgrade(alembic_cfg, "head")
+
+    # Start the session
     connection = db_engine.connect()
     db = Session(bind=connection)
 
-    yield db # Give the session to the test
+    yield db  # Give the session to the test
 
-    # 3. Teardown: Close session and drop tables after the test
+    # Teardown: Close session and drop all tables for next test
     db.close()
-    Base.metadata.drop_all(bind=db_engine) # Clean slate for next test
+    with db_engine.connect() as conn:
+        conn.execute(text("DROP SCHEMA public CASCADE"))
+        conn.execute(text("CREATE SCHEMA public"))
+        conn.commit()
 
 # --- Test Functions ---
 

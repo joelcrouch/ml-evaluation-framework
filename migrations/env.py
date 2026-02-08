@@ -16,11 +16,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 # ------------------------------------------------------------------------
 # 2. Load Environment Variables & Import Models
 # ------------------------------------------------------------------------
-load_dotenv()  # Load .env file
+# Import database connection module to ensure environment is loaded
+# and to get the canonical database URL used throughout the application
+from ml_eval.database.connection import SQLALCHEMY_DATABASE_URL
 
-# Import your Base and models so Alembic can detect changes
+# Import Base and models so Alembic can detect schema changes
+# This imports all models automatically since models.py is imported in connection.py
 from ml_eval.database.models import Base
-# (Ensure your models are imported in models.py or imported here so they register)
 
 config = context.config
 
@@ -29,13 +31,15 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # ------------------------------------------------------------------------
-# 3. Set the Database URL dynamically from .env
+# 3. Set the Database URL dynamically from connection module
 # ------------------------------------------------------------------------
-# This overrides the sqlalchemy.url in alembic.ini with your actual credentials
-db_url = os.getenv("SQLALCHEMY_DATABASE_URL")
-if not db_url:
-    raise ValueError("SQLALCHEMY_DATABASE_URL not found in .env")
-config.set_main_option("sqlalchemy.url", db_url)
+# This ensures Alembic uses the EXACT SAME database URL as the application
+# Importing from connection.py guarantees consistency across all environments
+# IMPORTANT: Only override if using the dummy placeholder URL from alembic.ini
+# This allows tests to set their own database URL without it being overridden
+current_url = config.get_main_option("sqlalchemy.url")
+if not current_url or current_url == "driver://user:pass@localhost/dbname":
+    config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URL)
 
 # ------------------------------------------------------------------------
 # 4. Set Target Metadata

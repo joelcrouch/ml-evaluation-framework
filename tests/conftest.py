@@ -1,11 +1,14 @@
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from ml_eval.main import app
 from ml_eval.database.connection import get_db, Base
+from alembic.config import Config
+from alembic import command
 import os
+from pathlib import Path
 
 # --- Test Database Configuration ---
 # Use a PostgreSQL database for testing
@@ -27,15 +30,30 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 @pytest.fixture(scope="function")
 def db_session():
     """
-    Create a new database session for a test, with table creation and cleanup.
+    Create a new database session for a test, using Alembic migrations for schema.
+
+    IMPORTANT: This fixture uses Alembic migrations to create the schema, ensuring
+    tests run against the same schema as dev/prod. This prevents schema drift.
     """
-    Base.metadata.create_all(bind=engine)
+    # Set up Alembic configuration to use test database
+    project_root = Path(__file__).parent.parent
+    alembic_cfg = Config(str(project_root / "alembic.ini"))
+    alembic_cfg.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URL)
+
+    # Run migrations to create schema
+    command.upgrade(alembic_cfg, "head")
+
     db = TestingSessionLocal()
     try:
         yield db
     finally:
         db.close()
-        Base.metadata.drop_all(bind=engine)
+        # Clean up: drop all tables after test
+        # We use raw SQL to drop all tables in the public schema
+        with engine.connect() as conn:
+            conn.execute(text("DROP SCHEMA public CASCADE"))
+            conn.execute(text("CREATE SCHEMA public"))
+            conn.commit()
 
 
 # --- Fixture for Test Client ---
