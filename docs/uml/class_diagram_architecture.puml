@@ -1,0 +1,351 @@
+@startuml ML Evaluation Framework - Class Architecture
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+title ML Evaluation Framework - Core Architecture
+
+package "Database Models" {
+    class TestPrompt <<Entity>> {
+        + id: int
+        + test_case_name: str
+        + model_type: str
+        + input_type: str
+        + output_type: str
+        + input_data: dict
+        + ground_truth: dict
+        + category: str
+        + tags: list[str]
+        + difficulty: str
+        + origin: str
+        + is_verified: bool
+        + test_case_metadata: dict
+        + created_at: datetime
+        + updated_at: datetime
+        --
+        + responses: List[Response]
+    }
+
+    class ModelRun <<Entity>> {
+        + id: int
+        + model_name: str
+        + model_version: str
+        + model_type: str
+        + model_endpoint: str
+        + config: dict
+        + started_at: datetime
+        + completed_at: datetime
+        + status: str
+        + total_cases: int
+        + completed_cases: int
+        + failed_cases: int
+        --
+        + responses: List[Response]
+    }
+
+    class Response <<Entity>> {
+        + id: int
+        + run_id: int
+        + test_case_id: int
+        + output_data: dict
+        + latency_ms: int
+        + memory_mb: float
+        + tokens_used: int
+        + error_message: str
+        + created_at: datetime
+        --
+        + prompt: TestPrompt
+        + model_run: ModelRun
+        + evaluations: List[Evaluation]
+    }
+
+    class Evaluation <<Entity>> {
+        + id: int
+        + response_id: int
+        + evaluator_type: str
+        + score: float
+        + passed: bool
+        + metrics: dict
+        + feedback: str
+        + evaluated_at: datetime
+        --
+        + response: Response
+    }
+
+    TestPrompt "1" -- "N" Response : has >
+    ModelRun "1" -- "N" Response : generates >
+    Response "1" -- "N" Evaluation : receives >
+}
+
+package "Core Interfaces" {
+    interface IModelAdapter <<interface>> {
+        + {abstract} run(input: Dict[str, Any]): Dict[str, Any]
+    }
+
+    interface IEvaluator <<interface>> {
+        + {abstract} evaluate(expected: Dict, actual: Dict): EvaluationResult
+    }
+
+    class EvaluationResult <<dataclass>> {
+        + score: float
+        + passed: bool
+        + metrics: Dict[str, Any]
+        + feedback: Optional[str]
+    }
+
+    IEvaluator ..> EvaluationResult : creates
+}
+
+package "Model Implementations" {
+    class BaselineTimeSeriesModel {
+        - model: tf.keras.Model
+        - label_index: int
+        --
+        + __init__(model_path: str)
+        + _preprocess_input(input_data: Dict): np.ndarray
+        + predict(input_data: Dict): Dict[str, Any]
+    }
+
+    class KerasTimeSeriesModel {
+        - model: tf.keras.Model
+        - config: Dict
+        --
+        + __init__(model_path: str, config: Dict)
+        + _preprocess_input(input_data: Dict): np.ndarray
+        + predict(input_data: Dict): Dict[str, Any]
+    }
+
+    class ImageClassifierModel {
+        - model: tf.keras.Model
+        - class_names: List[str]
+        --
+        + __init__()
+        + _load_and_preprocess_image(image_path: str): np.ndarray
+        + predict(input_data: Dict): Dict[str, Any]
+    }
+
+    class MatrixMultiplicationModel {
+        + multiply(matrix_a: list, matrix_b: list): list
+    }
+}
+
+package "Adapter Implementations" {
+    class BaselineTimeSeriesAdapter {
+        - model: BaselineTimeSeriesModel
+        --
+        + __init__(model: BaselineTimeSeriesModel)
+        + run(input_data: Dict): Dict[str, Any]
+    }
+
+    class KerasTimeSeriesAdapter {
+        - model: KerasTimeSeriesModel
+        --
+        + __init__(model: KerasTimeSeriesModel)
+        + run(input_data: Dict): Dict[str, Any]
+    }
+
+    class ImageClassifierAdapter {
+        - model: ImageClassifierModel
+        --
+        + __init__(model: ImageClassifierModel)
+        + run(input_data: Dict): Dict[str, Any]
+    }
+
+    class LocalMatrixAdapter {
+        - model: MatrixMultiplicationModel
+        --
+        + __init__(model: MatrixMultiplicationModel)
+        + run(input_data: Dict): Dict[str, Any]
+    }
+
+    class SimpleModelAdapter {
+        + run(input_data: Dict): Dict[str, Any]
+    }
+
+    IModelAdapter <|.. BaselineTimeSeriesAdapter
+    IModelAdapter <|.. KerasTimeSeriesAdapter
+    IModelAdapter <|.. ImageClassifierAdapter
+    IModelAdapter <|.. LocalMatrixAdapter
+    IModelAdapter <|.. SimpleModelAdapter
+
+    BaselineTimeSeriesAdapter o-- BaselineTimeSeriesModel
+    KerasTimeSeriesAdapter o-- KerasTimeSeriesModel
+    ImageClassifierAdapter o-- ImageClassifierModel
+    LocalMatrixAdapter o-- MatrixMultiplicationModel
+}
+
+package "Evaluator Implementations" {
+    class ExactMatchEvaluator {
+        + evaluate(expected: Dict, actual: Dict): EvaluationResult
+    }
+
+    class AccuracyEvaluator {
+        + evaluate(expected: Dict, actual: Dict): EvaluationResult
+    }
+
+    class MeanSquaredErrorEvaluator {
+        - _extract_predictions(actual: Dict): np.ndarray
+        - _extract_ground_truth(expected: Dict): np.ndarray
+        --
+        + evaluate(actual: Dict, expected: Dict): EvaluationResult
+    }
+
+    IEvaluator <|.. ExactMatchEvaluator
+    IEvaluator <|.. AccuracyEvaluator
+    IEvaluator <|.. MeanSquaredErrorEvaluator
+}
+
+package "Evaluation Engine" {
+    class EvaluationEngine {
+        - db: Session
+        - model_adapter: IModelAdapter
+        - evaluator: IEvaluator
+        --
+        + __init__(db: Session, model_adapter: IModelAdapter, evaluator: IEvaluator)
+        + run_evaluation(run_id: int): Optional[ModelRun]
+    }
+
+    EvaluationEngine o-- IModelAdapter
+    EvaluationEngine o-- IEvaluator
+    EvaluationEngine ..> ModelRun : reads/updates
+    EvaluationEngine ..> TestPrompt : reads
+    EvaluationEngine ..> Response : creates
+    EvaluationEngine ..> Evaluation : creates
+}
+
+package "CRUD Operations" {
+    class CRUDOperations <<Module>> {
+        ' TestPrompt CRUD
+        + create_prompt(db, test_case_name, ...): TestPrompt
+        + get_prompt(db, prompt_id): Optional[TestPrompt]
+        + get_prompts_by_model_type(db, model_type, limit): List[TestPrompt]
+        + update_prompt(db, prompt_id, prompt_update): Optional[TestPrompt]
+        + delete_prompt(db, prompt_id): bool
+        ' ModelRun CRUD
+        + create_model_run(db, model_name, ...): ModelRun
+        + get_model_run(db, run_id): Optional[ModelRun]
+        + complete_model_run(db, model_run_id): Optional[ModelRun]
+        + update_model_run(db, run_id, run_update): Optional[ModelRun]
+        + delete_model_run(db, run_id): bool
+        ' Response CRUD
+        + create_response(db, run_id, test_case_id, ...): Response
+        ' Evaluation CRUD
+        + create_evaluation(db, response_id, evaluator_type, ...): Evaluation
+        + get_evaluations_for_response(db, response_id): List[Evaluation]
+    }
+
+    CRUDOperations ..> TestPrompt : manages
+    CRUDOperations ..> ModelRun : manages
+    CRUDOperations ..> Response : manages
+    CRUDOperations ..> Evaluation : manages
+}
+
+package "FastAPI Router" {
+    class APIRouter <<Router>> {
+        ' TestPrompt endpoints
+        + POST /prompts/: create_prompt()
+        + GET /prompts/{prompt_id}: read_prompt()
+        + GET /prompts/domain/{model_type}: read_prompts_by_domain()
+        + PUT /prompts/{prompt_id}: update_prompt()
+        + PATCH /prompts/{prompt_id}: patch_prompt()
+        + DELETE /prompts/{prompt_id}: delete_prompt()
+        ' ModelRun endpoints
+        + POST /runs/: create_model_run()
+        + GET /runs/{run_id}: read_model_run()
+        + POST /runs/{run_id}/complete: complete_model_run()
+        + PUT /runs/{run_id}: update_model_run()
+        + PATCH /runs/{run_id}: patch_model_run()
+        + DELETE /runs/{run_id}: delete_model_run()
+    }
+
+    APIRouter ..> CRUDOperations : uses
+}
+
+package "Test Suite Management" {
+    class TestSuiteManager {
+        - validators_input: Dict[str, InputValidator]
+        - validators_output: Dict[str, OutputValidator]
+        --
+        + __init__(register_default_validators: bool)
+        + load_from_file(file_path: str): List[Dict]
+        + validate_test_suite(test_cases: List): ValidationReport
+        + save_to_database(test_cases: List, db: Session): int
+        + register_input_validator(type: str, validator: InputValidator)
+        + register_output_validator(type: str, validator: OutputValidator)
+    }
+
+    interface InputValidator <<interface>> {
+        + {abstract} validate(data: Any): ValidationResult
+    }
+
+    interface OutputValidator <<interface>> {
+        + {abstract} validate(data: Any): ValidationResult
+    }
+
+    TestSuiteManager o-- InputValidator
+    TestSuiteManager o-- OutputValidator
+    TestSuiteManager ..> TestPrompt : creates
+}
+
+package "Scripts" {
+    class TrainingScript <<Script>> {
+        + train_model()
+        + create_golden_dataset(test_df, config, num_samples): List[Dict]
+        + save_model(model, path)
+    }
+
+    class SeedScript <<Script>> {
+        + load_golden_dataset(path): List[Dict]
+        + seed_database(golden_cases)
+    }
+
+    class RunEvaluationScript <<Script>> {
+        + main(run_id: int)
+        + load_model(model_type, model_path): IModelAdapter
+        + create_evaluator(model_type): IEvaluator
+    }
+
+    class ReportGenerationScript <<Script>> {
+        + main(run_id: int)
+        + calculate_metrics(evaluations): Dict
+        + save_performance_charts(data, path)
+        + generate_console_report(metrics)
+    }
+
+    SeedScript ..> APIRouter : calls
+    RunEvaluationScript ..> EvaluationEngine : uses
+    ReportGenerationScript ..> CRUDOperations : queries
+}
+
+note right of EvaluationEngine
+  The EvaluationEngine orchestrates the entire
+  evaluation process:
+  1. Fetches TestPrompts by model_type
+  2. Runs model predictions via IModelAdapter
+  3. Stores Response records
+  4. Evaluates outputs via IEvaluator
+  5. Stores Evaluation records
+  6. Updates ModelRun progress
+end note
+
+note left of TestPrompt
+  TestPrompt stores the "golden dataset"
+  - Universal JSONB fields support any domain
+  - input_data: {"window": [...]} for time series
+  - input_data: {"image_path": "..."} for CV
+  - ground_truth: domain-specific expected output
+end note
+
+note bottom of IModelAdapter
+  Strategy pattern: Different model types
+  implement the same interface, allowing
+  the EvaluationEngine to be model-agnostic
+end note
+
+note bottom of IEvaluator
+  Strategy pattern: Different evaluation
+  metrics (MSE, Accuracy, ExactMatch)
+  implement the same interface
+end note
+
+@enduml

@@ -1,0 +1,169 @@
+@startuml ML Evaluation Framework - Data Flow
+!theme plain
+
+title ML Evaluation Framework - Data Flow Architecture
+
+package "Training & Dataset Creation" {
+    component [Training Script] as train
+    component [WindowGenerator] as window
+    file "processed_data.csv" as rawdata
+    file "baseline_model.keras" as modelfile
+    file "baseline_golden_dataset.json" as golden
+
+    rawdata --> train
+    train --> window : train/val/test split
+    window --> train : batched data
+    train --> modelfile : save trained model
+    train --> golden : create_golden_dataset()
+}
+
+package "Database Seeding" {
+    component [Seed Script] as seed
+    component [FastAPI Server] as api
+    component [CRUD Operations] as crud
+
+    golden --> seed : load JSON
+    seed --> api : POST /api/v1/prompts/
+    api --> crud : create_prompt()
+    crud --> db : INSERT test_cases
+}
+
+database "PostgreSQL" as db {
+    collections test_cases
+    collections model_runs
+    collections responses
+    collections evaluations
+}
+
+package "Model Evaluation" {
+    component [run_evaluation.py] as runeval
+    component [EvaluationEngine] as engine
+    component [Model Adapter] as adapter
+    component [Model] as model
+    component [Evaluator] as evaluator
+
+    runeval --> engine : run_evaluation(run_id)
+    engine --> crud : get test cases
+    db --> engine : TestPrompt[]
+
+    engine --> adapter : run(input_data)
+    adapter --> model : predict()
+    modelfile --> model : load model
+    model --> adapter : predictions
+    adapter --> engine : output_data
+
+    engine --> crud : create_response()
+    crud --> db : INSERT responses
+
+    engine --> evaluator : evaluate(expected, actual)
+    evaluator --> engine : EvaluationResult
+    engine --> crud : create_evaluation()
+    crud --> db : INSERT evaluations
+
+    engine --> crud : update ModelRun progress
+    crud --> db : UPDATE model_runs
+}
+
+package "Reporting & Visualization" {
+    component [Report Script] as report
+    component [Metrics Calculator] as metrics
+    component [Chart Generator] as charts
+    file "performance_report.png" as chartfile
+    file "summary.csv" as csvfile
+
+    report --> crud : query evaluations
+    db --> report : evaluation data
+    report --> metrics : calculate statistics
+    metrics --> charts : generate visualizations
+    charts --> chartfile
+    report --> csvfile : save detailed metrics
+}
+
+package "User Interactions" {
+    actor User
+    component [CLI Commands] as cli
+
+    User --> cli : 1. python train_*.py
+    cli --> train
+
+    User --> cli : 2. python seed_*.py
+    cli --> seed
+
+    User --> cli : 3. curl POST /runs/
+    cli --> api : create ModelRun
+    api --> crud
+    crud --> db
+
+    User --> cli : 4. python run_evaluation.py <run_id>
+    cli --> runeval
+
+    User --> cli : 5. python generate_report.py <run_id>
+    cli --> report
+
+    chartfile --> User : view results
+    csvfile --> User : detailed data
+}
+
+note right of golden
+  **Golden Dataset Format**
+  [
+    {
+      "case_id": 1,
+      "input_data": {
+        "window": [[f1, f2, ...]]
+      },
+      "ground_truth": {
+        "prediction": [[value]]
+      },
+      "metadata": {...}
+    },
+    ...
+  ]
+end note
+
+note right of db
+  **Database Tables:**
+  - test_cases: Golden dataset
+  - model_runs: Execution tracking
+  - responses: Model outputs
+  - evaluations: Scores & metrics
+
+  **Data Relationships:**
+  test_cases ←→ responses ←→ evaluations
+  model_runs ←→ responses
+end note
+
+note left of adapter
+  **Strategy Pattern**
+
+  Different model types use
+  different adapters:
+  - BaselineTimeSeriesAdapter
+  - KerasTimeSeriesAdapter
+  - ImageClassifierAdapter
+
+  All implement IModelAdapter
+  interface, making the engine
+  model-agnostic.
+end note
+
+note left of evaluator
+  **Strategy Pattern**
+
+  Different evaluation metrics:
+  - MeanSquaredErrorEvaluator
+  - AccuracyEvaluator
+  - ExactMatchEvaluator
+
+  All implement IEvaluator
+  interface, returning
+  EvaluationResult.
+end note
+
+' Data Flow Annotations
+golden -[#blue,dashed]-> db : "Data flows from\nJSON files into\ndatabase tables"
+db -[#green,dashed]-> engine : "Engine queries\ntest cases by\nmodel_type"
+engine -[#red,dashed]-> db : "Engine stores\nresponses &\nevaluations"
+db -[#purple,dashed]-> report : "Report queries\naggregated data"
+
+@enduml

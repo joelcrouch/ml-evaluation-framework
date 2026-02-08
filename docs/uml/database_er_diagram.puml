@@ -1,0 +1,241 @@
+@startuml ML Evaluation Framework - Database Schema
+!theme plain
+
+title ML Evaluation Framework - Database Entity-Relationship Diagram
+
+entity "test_cases" as test_cases {
+  * **id**: INTEGER <<PK>>
+  --
+  * test_case_name: VARCHAR
+  * model_type: VARCHAR
+  * input_type: VARCHAR
+  * output_type: VARCHAR
+  * input_data: JSONB
+  * ground_truth: JSONB
+  --
+  category: VARCHAR
+  tags: VARCHAR[]
+  difficulty: VARCHAR
+  * origin: VARCHAR = 'human'
+  * is_verified: BOOLEAN = TRUE
+  test_case_metadata: JSONB
+  created_by: VARCHAR
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+  ==
+  Indexes:
+  - ix_test_cases_id (id)
+  - ix_test_cases_test_case_name (test_case_name)
+  - ix_test_cases_model_type (model_type)
+  - ix_test_cases_category (category)
+}
+
+entity "model_runs" as model_runs {
+  * **id**: INTEGER <<PK>>
+  --
+  * model_name: VARCHAR
+  * model_version: VARCHAR
+  * model_type: VARCHAR
+  model_endpoint: VARCHAR
+  config: JSONB
+  --
+  started_at: TIMESTAMP
+  completed_at: TIMESTAMP
+  status: VARCHAR = 'pending'
+  total_cases: INTEGER = 0
+  completed_cases: INTEGER = 0
+  failed_cases: INTEGER = 0
+  ==
+  Indexes:
+  - ix_model_runs_id (id)
+  - ix_model_runs_model_name (model_name)
+}
+
+entity "responses" as responses {
+  * **id**: INTEGER <<PK>>
+  --
+  * run_id: INTEGER <<FK>>
+  * test_case_id: INTEGER <<FK>>
+  * output_data: JSONB
+  --
+  latency_ms: INTEGER
+  memory_mb: FLOAT
+  tokens_used: INTEGER
+  error_message: VARCHAR
+  created_at: TIMESTAMP
+  ==
+  Indexes:
+  - ix_responses_id (id)
+  - ix_responses_run_id (run_id)
+  - ix_responses_test_case_id (test_case_id)
+  ==
+  Constraints:
+  - UNIQUE(test_case_id, run_id)
+    "One model version cannot run
+     the same test case twice"
+}
+
+entity "evaluations" as evaluations {
+  * **id**: INTEGER <<PK>>
+  --
+  * response_id: INTEGER <<FK>>
+  * evaluator_type: VARCHAR
+  * score: FLOAT
+  * passed: BOOLEAN
+  --
+  metrics: JSONB
+  feedback: VARCHAR
+  evaluated_at: TIMESTAMP
+  ==
+  Indexes:
+  - ix_evaluations_id (id)
+  - ix_evaluations_response_id (response_id)
+}
+
+entity "alembic_version" as alembic {
+  * **version_num**: VARCHAR(32) <<PK>>
+}
+
+' Relationships
+model_runs ||--o{ responses : "1:N\ngenerates"
+test_cases ||--o{ responses : "1:N\nhas"
+responses ||--o{ evaluations : "1:N\nreceives"
+
+note right of test_cases
+  **Golden Dataset Storage**
+
+  The test_cases table stores the verified
+  "golden dataset" for model evaluation.
+
+  **JSONB Fields for Flexibility:**
+  - input_data: Universal input format
+    Examples:
+    • Time Series: {"window": [[feat1, feat2, ...]]}
+    • CV: {"image_path": "/path/to/image.jpg"}
+    • NLP: {"text": "What is the capital?"}
+
+  - ground_truth: Expected output
+    Examples:
+    • Time Series: {"prediction": [[temp_value]]}
+    • CV: {"label": "tulips"}
+    • NLP: {"answer": "Paris"}
+
+  **Model Type as Filter:**
+  The model_type field (e.g., 'baseline_time_series',
+  'image_classification') allows retrieving only
+  relevant test cases for a specific model.
+end note
+
+note right of model_runs
+  **Model Execution Tracking**
+
+  Each ModelRun represents a specific
+  execution of a model version across
+  the test set.
+
+  **Status Flow:**
+  pending → running → completed/failed
+
+  **Progress Tracking:**
+  - total_cases: Number of test cases
+  - completed_cases: Successfully evaluated
+  - failed_cases: Errors during evaluation
+
+  **Version Tracking:**
+  The combination of model_name + model_version
+  allows comparing different versions of the
+  same model over time.
+end note
+
+note left of responses
+  **Model Output Storage**
+
+  Links a ModelRun to a TestPrompt and
+  stores the model's output.
+
+  **UNIQUE Constraint:**
+  UNIQUE(test_case_id, run_id) prevents
+  duplicate evaluations of the same test
+  case by the same model run.
+
+  **Output Storage:**
+  - output_data: JSONB stores predictions
+    Examples:
+    • {"prediction": [[0.234]]}
+    • {"predicted_label": "sunflowers"}
+
+  **Performance Metrics:**
+  - latency_ms: Response time
+  - memory_mb: Memory usage
+  - tokens_used: For LLM models
+  - error_message: Failure details
+end note
+
+note left of evaluations
+  **Scoring & Metrics**
+
+  Stores quantitative assessment of each
+  Response against ground truth.
+
+  **evaluator_type Examples:**
+  - MeanSquaredErrorEvaluator
+  - AccuracyEvaluator
+  - ExactMatchEvaluator
+  - BLEUScoreEvaluator
+
+  **score:**
+  Normalized value [0.0 - 1.0]
+  Higher is better
+
+  **passed:**
+  Boolean pass/fail against threshold
+
+  **metrics (JSONB):**
+  Detailed evaluation data:
+  • {"mse": 0.0142, "mae": 0.0852, "rmse": 0.119}
+  • {"is_correct": true, "expected": "tulips", "actual": "tulips"}
+end note
+
+note bottom of alembic
+  **Alembic Migration Tracking**
+
+  Stores the current database schema version.
+  Used by Alembic to track which migrations
+  have been applied.
+
+  CRITICAL: This table is the single source
+  of truth for database schema state.
+end note
+
+' Data Flow Example
+note as flow_example
+  **Example: Baseline Time Series Evaluation Flow**
+
+  1. test_cases table has 50 golden cases
+     (model_type='baseline_time_series')
+
+  2. User creates ModelRun:
+     POST /api/v1/runs/
+     → model_runs(id=1, model_name='baseline_model',
+                  model_type='baseline_time_series', status='pending')
+
+  3. run_evaluation.py executes:
+     → Queries test_cases WHERE model_type='baseline_time_series'
+     → For each test case:
+       a) Runs model prediction
+       b) Inserts responses(run_id=1, test_case_id=N, output_data={...})
+       c) Evaluates prediction vs ground_truth
+       d) Inserts evaluations(response_id=M, evaluator_type='MeanSquaredErrorEvaluator',
+                              score=0.95, passed=true, metrics={mse, mae, rmse})
+     → Updates model_runs(id=1, status='completed', completed_cases=50)
+
+  4. generate_report.py queries:
+     SELECT e.*, r.*, t.*
+     FROM evaluations e
+     JOIN responses r ON e.response_id = r.id
+     JOIN test_cases t ON r.test_case_id = t.id
+     WHERE r.run_id = 1
+     → Generates charts and statistics
+end note
+
+@enduml
