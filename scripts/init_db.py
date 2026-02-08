@@ -22,6 +22,14 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+def check_tables_exist(engine, expected_tables):
+    """Check if expected tables exist in the database."""
+    from sqlalchemy import inspect
+    inspector = inspect(engine)
+    existing_tables = set(inspector.get_table_names())
+    return all(table in existing_tables for table in expected_tables)
+
+
 def run_migrations():
     """Run Alembic migrations to initialize or update the database schema."""
     print("=" * 70)
@@ -30,7 +38,7 @@ def run_migrations():
 
     # Verify environment setup
     try:
-        from ml_eval.database.connection import SQLALCHEMY_DATABASE_URL, check_database_connection
+        from ml_eval.database.connection import SQLALCHEMY_DATABASE_URL, check_database_connection, engine
         print(f"\n✅ Database URL loaded: {SQLALCHEMY_DATABASE_URL.split('@')[1] if '@' in SQLALCHEMY_DATABASE_URL else 'configured'}")
     except ValueError as e:
         print(f"\n❌ ERROR: {e}")
@@ -53,23 +61,45 @@ def run_migrations():
         print("  3. Are credentials in .env correct?")
         sys.exit(1)
 
+    # Import Alembic here to avoid import issues
+    from alembic.config import Config
+    from alembic import command
+
+    # Load Alembic configuration
+    alembic_cfg = Config(str(project_root / "alembic.ini"))
+
+    # Check for schema drift: Alembic version exists but tables don't
+    print("\n🔍 Checking schema integrity...")
+    expected_tables = ['test_cases', 'model_runs', 'responses', 'evaluations']
+
+    if not check_tables_exist(engine, expected_tables):
+        print("⚠️  WARNING: Expected tables are missing!")
+        print("   This can happen if alembic_version table exists but migrations didn't run properly.")
+        print("   Resetting Alembic to base and re-running migrations...")
+
+        try:
+            # Reset alembic version to base
+            command.stamp(alembic_cfg, "base")
+            print("   ✓ Reset alembic_version to base")
+        except Exception as e:
+            print(f"   Note: Could not reset alembic version (may not exist yet): {e}")
+
     # Run Alembic migrations
     print("\n🔄 Running Alembic migrations (upgrade head)...")
     try:
-        # Import Alembic here to avoid import issues
-        from alembic.config import Config
-        from alembic import command
-
-        # Load Alembic configuration
-        alembic_cfg = Config(str(project_root / "alembic.ini"))
-
         # Run migrations
         command.upgrade(alembic_cfg, "head")
 
-        print("\n✅ SUCCESS: Database schema is up to date!")
-        print("\n" + "=" * 70)
-        print("Database is ready for use.")
-        print("=" * 70)
+        # Verify tables were created
+        if check_tables_exist(engine, expected_tables):
+            print("\n✅ SUCCESS: Database schema is up to date!")
+            print(f"   Created tables: {', '.join(expected_tables)}")
+            print("\n" + "=" * 70)
+            print("Database is ready for use.")
+            print("=" * 70)
+        else:
+            print("\n⚠️  WARNING: Migration completed but some tables are still missing.")
+            print("   Please check the migration files and database logs.")
 
     except Exception as e:
         print(f"\n❌ ERROR: Migration failed")
