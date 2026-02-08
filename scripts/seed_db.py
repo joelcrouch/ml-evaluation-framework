@@ -127,9 +127,18 @@ def seed_data(db: Session):
 
 
 if __name__ == "__main__":
-    # Ensure tables are created first (optional if Alembic was run)
-    Base.metadata.create_all(bind=SessionLocal().bind)
-    
+    # NOTE: Database schema must be initialized BEFORE running this script.
+    # Run: python scripts/init_db.py
+    #
+    # This script assumes tables already exist via Alembic migrations.
+    # It does NOT create tables itself to prevent schema drift.
+
+    print("\n" + "=" * 70)
+    print("DATABASE SEEDING")
+    print("=" * 70)
+    print("\nNOTE: This script assumes the database schema is already initialized.")
+    print("If you get table errors, run: python scripts/init_db.py\n")
+
     try:
         db = SessionLocal()
         seed_data(db)
@@ -141,4 +150,7 @@ if __name__ == "__main__":
         sys.exit(1)
     except Exception as e:
         print(f"\n🛑 An unexpected error occurred during seeding: {e}")
+        print("\nTroubleshooting:")
+        print("  - If you get 'table does not exist' errors, run: python scripts/init_db.py")
+        print("  - This script does not create tables - it only inserts data")
         sys.exit(1)

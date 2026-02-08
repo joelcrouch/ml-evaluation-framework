@@ -4,18 +4,40 @@ import tempfile
 import json
 import os
 from sqlalchemy.orm import Session
+from sqlalchemy import text, create_engine
+from alembic.config import Config
+from alembic import command
+from pathlib import Path
 
-from ml_eval.database.connection import SessionLocal
-from ml_eval.database.models import Base
+# Test Database Configuration
+db_user = os.getenv("POSTGRES_USER", "ml_user")
+db_password = os.getenv("POSTGRES_PASSWORD", "ml_password")
+db_host = "localhost"
+db_port = os.getenv("POSTGRES_PORT", "5433")
+db_name = os.getenv("POSTGRES_DB", "ml_eval_db") + "_test"
+TEST_DATABASE_URL = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 
 @pytest.fixture(scope="function")
 def test_db():
-    """Provides a fresh database session for each test."""
-    engine = SessionLocal().bind
+    """
+    Provides a fresh database session for each test, using Alembic migrations.
 
-    # Create tables
-    Base.metadata.create_all(bind=engine)
+    IMPORTANT: Uses Alembic migrations to create schema, ensuring tests run
+    against the same schema as dev/prod. This prevents schema drift.
+    """
+    engine = create_engine(TEST_DATABASE_URL)
+
+    # Get database URL for Alembic
+    db_url = TEST_DATABASE_URL
+
+    # Set up Alembic configuration to use test database
+    project_root = Path(__file__).parent.parent.parent
+    alembic_cfg = Config(str(project_root / "alembic.ini"))
+    alembic_cfg.set_main_option("sqlalchemy.url", db_url)
+
+    # Run migrations to create schema
+    command.upgrade(alembic_cfg, "head")
 
     # Create session
     connection = engine.connect()
@@ -23,9 +45,12 @@ def test_db():
 
     yield db
 
-    # Cleanup
+    # Cleanup: drop all tables after test
     db.close()
-    Base.metadata.drop_all(bind=engine)
+    with engine.connect() as conn:
+        conn.execute(text("DROP SCHEMA public CASCADE"))
+        conn.execute(text("CREATE SCHEMA public"))
+        conn.commit()
 
 
 @pytest.fixture
