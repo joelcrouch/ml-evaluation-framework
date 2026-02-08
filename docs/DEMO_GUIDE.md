@@ -37,13 +37,14 @@ Next, start the required background services: the database and the web server.
 1.  **Start the PostgreSQL Database:**
     This command uses Docker Compose to start the database container in the background.
     ```bash
-    ./start_db.sh
+    ./start_db.sh  (this is jsut docker compose up -d FYI)
     ```
 
 2.  **Create Database Tables:**
     This script connects to the newly started database and creates all the necessary tables (e.g., `test_cases`, `model_runs`). **This is a critical step.**
     ```bash
-    python scripts/setup_db.py
+    python scripts/setup_db.py<=WROng
+    python scripts/init_db.py
     ```
 
 3.  **Start the FastAPI Web Server:**
@@ -51,6 +52,13 @@ Next, start the required background services: the database and the web server.
     ```bash
     uvicorn ml_eval.main:app --host 0.0.0.0 --port 8000
     ```
+
+    I think i am using start_server.sh instead of the bash command above. It brings in .env and uses the correct db. 
+
+    ```
+    ./start_server.sh
+    ```
+
     **Leave this terminal open**, as it will display live logs from the server.
 
 ## Step 3: Run the Flower Classification Demo

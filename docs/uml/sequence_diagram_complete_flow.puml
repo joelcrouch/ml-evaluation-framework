@@ -1,0 +1,228 @@
+@startuml ML Evaluation Framework - Complete Flow
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 200
+
+title ML Evaluation Framework - Complete End-to-End Flow
+
+actor User
+participant "Training Script\n(train_baseline_time_series.py)" as Train
+participant "Golden Dataset\n(JSON file)" as Golden
+participant "Seed Script\n(seed_baseline_test_cases.py)" as Seed
+participant "FastAPI\n(/api/v1/*)" as API
+participant "CRUD\nOperations" as CRUD
+database "PostgreSQL\nDatabase" as DB
+participant "run_evaluation.py" as RunEval
+participant "EvaluationEngine" as Engine
+participant "ModelAdapter\n(BaselineTimeSeriesAdapter)" as Adapter
+participant "Model\n(BaselineTimeSeriesModel)" as Model
+participant "Evaluator\n(MeanSquaredErrorEvaluator)" as Evaluator
+participant "Report Script\n(generate_report.py)" as Report
+
+== Phase 1: Golden Dataset Creation ==
+User -> Train: python train_baseline_time_series.py
+activate Train
+
+Train -> Train: Load processed_data.csv
+Train -> Train: Split train/val/test (70/20/10)
+Train -> Train: Create WindowGenerator
+Train -> Train: Build Baseline model
+Train -> Train: Compile & train model
+Train -> Train: Save models/baseline_model.keras
+Train -> Train: create_golden_dataset(test_df, 50 samples)
+
+Train -> Golden: Save data/baseline_golden_dataset.json
+note right
+  JSON structure:
+  [
+    {
+      "case_id": 1,
+      "input_data": {"window": [[features...]]},
+      "ground_truth": {"prediction": [[temp]]},
+      "metadata": {...}
+    },
+    ...
+  ]
+end note
+
+Train --> User: ✅ Model trained & golden dataset created
+deactivate Train
+
+== Phase 2: Database Seeding ==
+User -> Seed: python seed_baseline_test_cases.py
+activate Seed
+
+Seed -> Golden: Load golden_dataset.json
+Golden --> Seed: List[golden_cases]
+
+loop For each golden_case
+    Seed -> API: POST /api/v1/prompts/\n{\n  "test_case_name": "...",\n  "model_type": "baseline_time_series",\n  "input_data": {...},\n  "ground_truth": {...}\n}
+    activate API
+
+    API -> CRUD: create_prompt(db, payload)
+    activate CRUD
+
+    CRUD -> DB: INSERT INTO test_cases
+    activate DB
+    DB --> CRUD: TestPrompt(id=N)
+    deactivate DB
+
+    CRUD --> API: TestPrompt object
+    deactivate CRUD
+
+    API --> Seed: 200 OK {id: N}
+    deactivate API
+end
+
+Seed --> User: ✅ Created 50 test cases
+deactivate Seed
+
+== Phase 3: Model Run Creation ==
+User -> API: curl POST /api/v1/runs/\n{\n  "model_name": "baseline_model",\n  "model_version": "1.0",\n  "model_type": "baseline_time_series"\n}
+activate API
+
+API -> CRUD: create_model_run(db, payload)
+activate CRUD
+
+CRUD -> DB: INSERT INTO model_runs\n(status='pending', total_cases=0)
+activate DB
+DB --> CRUD: ModelRun(id=R, status='pending')
+deactivate DB
+
+CRUD --> API: ModelRun object
+deactivate CRUD
+
+API --> User: 200 OK {id: R, status: 'pending'}
+deactivate API
+
+== Phase 4: Evaluation Execution ==
+User -> RunEval: python run_evaluation.py R
+activate RunEval
+
+RunEval -> DB: SELECT * FROM model_runs WHERE id=R
+activate DB
+DB --> RunEval: ModelRun(id=R, model_type='baseline_time_series')
+deactivate DB
+
+RunEval -> RunEval: Load models/baseline_model.keras
+RunEval -> Model: new BaselineTimeSeriesModel(model_path)
+activate Model
+Model --> RunEval: model instance
+deactivate Model
+
+RunEval -> Adapter: new BaselineTimeSeriesAdapter(model)
+activate Adapter
+Adapter --> RunEval: adapter instance
+deactivate Adapter
+
+RunEval -> Evaluator: new MeanSquaredErrorEvaluator()
+activate Evaluator
+Evaluator --> RunEval: evaluator instance
+deactivate Evaluator
+
+RunEval -> Engine: new EvaluationEngine(db, adapter, evaluator)
+activate Engine
+
+RunEval -> Engine: run_evaluation(run_id=R)
+
+Engine -> DB: UPDATE model_runs SET status='running' WHERE id=R
+activate DB
+deactivate DB
+
+Engine -> DB: SELECT * FROM test_cases\nWHERE model_type='baseline_time_series'
+activate DB
+DB --> Engine: List[TestPrompt] (50 cases)
+deactivate DB
+
+loop For each TestPrompt
+    Engine -> Adapter: run(prompt.input_data)
+    activate Adapter
+
+    Adapter -> Model: predict(input_data)
+    activate Model
+
+    Model -> Model: _preprocess_input(input_data)
+    note right: Convert to numpy array\nEnsure shape (batch, timesteps, features)
+
+    Model -> Model: self.model.predict(preprocessed)
+
+    Model --> Adapter: {"prediction": [[value]], "metadata": {...}}
+    deactivate Model
+
+    Adapter --> Engine: model_output
+    deactivate Adapter
+
+    Engine -> CRUD: create_response(db, run_id=R,\ntest_case_id=prompt.id, output_data=model_output)
+    activate CRUD
+
+    CRUD -> DB: INSERT INTO responses
+    activate DB
+    DB --> CRUD: Response(id=N)
+    deactivate DB
+
+    CRUD --> Engine: response
+    deactivate CRUD
+
+    Engine -> Evaluator: evaluate(expected=prompt.ground_truth,\nactual=response.output_data)
+    activate Evaluator
+
+    Evaluator -> Evaluator: _extract_predictions(actual)
+    Evaluator -> Evaluator: _extract_ground_truth(expected)
+    Evaluator -> Evaluator: Calculate MSE, MAE, RMSE
+    Evaluator -> Evaluator: Calculate normalized score
+
+    Evaluator --> Engine: EvaluationResult(\n  score=0.95,\n  passed=True,\n  metrics={mse, mae, rmse},\n  feedback="..."\n)
+    deactivate Evaluator
+
+    Engine -> CRUD: create_evaluation(db, response_id=N,\nevaluator_type="MeanSquaredErrorEvaluator",\nscore, passed, metrics, feedback)
+    activate CRUD
+
+    CRUD -> DB: INSERT INTO evaluations
+    activate DB
+    DB --> CRUD: Evaluation(id=E)
+    deactivate DB
+
+    CRUD --> Engine: evaluation
+    deactivate CRUD
+
+    Engine -> DB: UPDATE model_runs\nSET completed_cases=completed_cases+1
+    activate DB
+    deactivate DB
+end
+
+Engine -> CRUD: complete_model_run(db, run_id=R)
+activate CRUD
+
+CRUD -> DB: UPDATE model_runs\nSET status='completed', completed_at=NOW()
+activate DB
+DB --> CRUD: ModelRun(status='completed')
+deactivate DB
+
+CRUD --> Engine: completed_run
+deactivate CRUD
+
+Engine --> RunEval: ModelRun(status='completed')
+deactivate Engine
+
+RunEval --> User: ✅ Evaluation complete\nTotal: 50, Completed: 50, Failed: 0
+deactivate RunEval
+
+== Phase 5: Report Generation ==
+User -> Report: python generate_report.py R
+activate Report
+
+Report -> DB: SELECT e.*, r.*, t.*\nFROM evaluations e\nJOIN responses r ON e.response_id=r.id\nJOIN test_cases t ON r.test_case_id=t.id\nWHERE r.run_id=R
+activate DB
+DB --> Report: List[evaluation, response, test_case]
+deactivate DB
+
+Report -> Report: Calculate aggregates:\n- overall_accuracy\n- mean MSE, MAE, RMSE\n- score statistics\n- best/worst predictions
+
+Report -> Report: save_performance_charts(\n  mse_distribution,\n  mae_distribution,\n  score_distribution,\n  metrics_over_time\n)
+
+Report -> Report: Save reports/run_R_time_series_report.png
+
+Report --> User: ✅ Report generated\nMean MSE: 0.0142\nMean MAE: 0.0852\nCharts saved to reports/
+deactivate Report
+
+@enduml
