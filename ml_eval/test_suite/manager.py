@@ -26,8 +26,10 @@ from ml_eval.test_suite.validators import (
 )
 
 
-class TestSuiteManager:
+class SuiteManager:
     """Manages test suite loading, validation, and database persistence."""
+
+    __test__ = False  # Tell pytest this is not a test class
 
     REQUIRED_FIELDS = [
         "test_case_name",

@@ -7,7 +7,7 @@ title ML Evaluation Framework - Complete End-to-End Flow
 
 actor User
 participant "Training Script\n(train_baseline_time_series.py)" as Train
-participant "Golden Dataset\n(JSON file)" as Golden
+participant "Golden Dataset\n(JSON file)" as Golden>
 participant "Seed Script\n(seed_baseline_test_cases.py)" as Seed
 participant "FastAPI\n(/api/v1/*)" as API
 participant "CRUD\nOperations" as CRUD

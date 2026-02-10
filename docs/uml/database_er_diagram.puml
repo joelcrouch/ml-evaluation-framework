@@ -12,7 +12,7 @@ entity "test_cases" as test_cases {
   * output_type: VARCHAR
   * input_data: JSONB
   * ground_truth: JSONB
-  --
+  -->
   category: VARCHAR
   tags: VARCHAR[]
   difficulty: VARCHAR

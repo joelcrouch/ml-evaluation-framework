@@ -43,7 +43,7 @@ Next, start the required background services: the database and the web server.
 2.  **Create Database Tables:**
     This script connects to the newly started database and creates all the necessary tables (e.g., `test_cases`, `model_runs`). **This is a critical step.**
     ```bash
-    python scripts/setup_db.py<=WROng
+    FIXED!
     python scripts/init_db.py
     ```
 
